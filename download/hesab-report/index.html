@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>حسابداری شخصی در ایران — گزارش تحقیق بازار و نقشه راه محصول</title>
+<link rel="stylesheet" href="assets/fonts/vazirmatn.css">
+<style>
+/* ─────────── Cascade Palette (nature / minimal) ─────────── */
+:root {
+  --page-bg: #f5f6f5;
+  --section-bg: #edeeed;
+  --card-bg: #e4eae7;
+  --table-stripe: #edefee;
+  --header-fill: #456454;
+  --cover-block: #556e62;
+  --border: #b7d3c5;
+  --icon: #3a7d5b;
+  --accent: #298959;
+  --accent-secondary: #4fbb85;
+  --text-primary: #232725;
+  --text-muted: #5f6a64;
+  --success: #487e5a;
+  --warning: #a08348;
+  --error: #a55149;
+  --info: #557493;
+}
+
+/* ─────────── Page setup ─────────── */
+@page { size: 794px 1123px; margin: 0; }
+html, body {
+  margin: 0; padding: 0;
+  width: 794px;
+  background: var(--page-bg);
+  color: var(--text-primary);
+  font-family: 'Vazirmatn', sans-serif;
+  line-break: strict;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+@media screen {
+  html { height: auto; display: flex; justify-content: center; background: #dfe3e0; }
+  body { transform-origin: top center; scale: min(1, calc(100vw / 830)); margin: 16px auto; box-shadow: 0 0 40px rgba(35,39,37,0.18); }
+}
+* { box-sizing: border-box; }
+
+/* ─────────── Cover ─────────── */
+.cover {
+  width: 794px; height: 1123px;
+  position: relative;
+  break-after: page;
+  overflow: hidden;
+  background: var(--page-bg);
+}
+.cover-bg {
+  position: absolute; inset: 0; overflow: hidden; z-index: 1;
+  background-image:
+    linear-gradient(rgba(35,39,37,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(35,39,37,0.025) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+.cover-line {
+  position: absolute; z-index: 2;
+  right: 88px; top: 112px; bottom: 112px; width: 10px;
+  background: linear-gradient(180deg, var(--accent), var(--cover-block));
+  border-radius: 5px;
+}
+.cover-content {
+  position: absolute; inset: 0; z-index: 3;
+  padding-right: 178px; padding-left: 64px;
+}
+.cover-kicker {
+  position: absolute; top: 148px; right: 178px;
+  display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: 1.5px;
+  color: var(--header-fill); background: rgba(41,137,89,0.08);
+  border: 1px solid rgba(41,137,89,0.22);
+  padding: 6px 16px; border-radius: 999px;
+}
+.cover-title {
+  position: absolute; top: 268px; right: 178px;
+  max-width: 552px;
+  font-size: 64px; font-weight: 900; line-height: 1.22;
+  color: var(--text-primary);
+}
+.cover-title .soft { color: var(--accent); }
+.cover-summary {
+  position: absolute; top: 568px; right: 178px;
+  max-width: 470px;
+  font-size: 15.5px; font-weight: 400; line-height: 1.95;
+  color: var(--text-primary); opacity: 0.88;
+  text-align: justify;
+}
+.cover-meta {
+  position: absolute; top: 806px; right: 178px;
+  font-size: 14px; line-height: 2.1; color: var(--text-muted);
+}
+.cover-meta b { color: var(--text-primary); font-weight: 600; }
+.cover-statrow {
+  position: absolute; top: 900px; right: 178px; left: 64px;
+  display: flex; flex-wrap: wrap; gap: 14px;
+}
+.cover-stat {
+  min-width: 108px; max-width: 100%;
+  background: #ffffff; border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 16px;
+}
+.cover-stat .n { font-size: 21px; font-weight: 800; color: var(--accent); }
+.cover-stat .l { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+.cover-footer {
+  position: absolute; bottom: 56px; right: 178px; left: 64px;
+  font-size: 11px; letter-spacing: 1.5px; color: var(--text-muted); opacity: 0.75;
+}
+
+/* ─────────── Flow content ─────────── */
+.main-content {
+  padding: 58px 64px 44px 64px;
+  /* no fixed height, no overflow */
+}
+p { margin: 0 0 12px 0; text-align: justify; font-size: 14.5px; line-height: 1.95; }
+.body-text { font-size: 14.5px; line-height: 1.95; text-align: justify; }
+.lead { font-size: 15.5px; color: var(--text-primary); }
+small, .small { font-size: 11px; color: var(--text-muted); }
+
+.chapter-header { break-after: avoid; break-inside: avoid; margin-top: 26px; margin-bottom: 16px; }
+.chapter-header:first-child { margin-top: 0; }
+.section-tag {
+  display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  color: var(--accent); background: rgba(41,137,89,0.09);
+  border: 1px solid rgba(41,137,89,0.25);
+  padding: 3px 12px; border-radius: 999px; margin-bottom: 10px;
+}
+.section-title { font-size: 26px; font-weight: 800; line-height: 1.45; margin: 0 0 8px 0; color: var(--text-primary); }
+.divider { width: 64px; height: 6px; background: var(--accent); border-radius: 3px; margin-bottom: 14px; }
+h3.sub { font-size: 17px; font-weight: 700; margin: 18px 0 8px 0; break-after: avoid; color: var(--header-fill); }
+h4.sub2 { font-size: 14.5px; font-weight: 700; margin: 12px 0 6px 0; break-after: avoid; color: var(--text-primary); }
+
+/* ─────────── Stat grid (executive) ─────────── */
+.stat-grid { display: flex; flex-wrap: wrap; gap: 12px; max-width: 100%; margin: 14px 0 16px 0; break-inside: avoid; }
+.stat-box {
+  flex: 1 1 150px; min-width: 140px; max-width: 100%;
+  background: #ffffff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px 12px 16px;
+}
+.stat-box .n { font-size: 24px; font-weight: 800; color: var(--accent); line-height: 1.2; }
+.stat-box .n span.unit { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.stat-box .l { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.6; }
+
+/* ─────────── Callout / quote ─────────── */
+.callout {
+  background: var(--card-bg); border-radius: 12px;
+  border-right: 4px solid var(--accent);
+  padding: 14px 18px; margin: 12px 0 14px 0;
+  break-inside: avoid;
+}
+.callout p { margin: 0; font-size: 13.5px; line-height: 1.9; }
+.callout .t { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+
+/* ─────────── Category cards (chapter 2) ─────────── */
+.cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.cat-card {
+  background: #ffffff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px; break-inside: avoid;
+}
+.cat-card .icon-dot {
+  width: 30px; height: 30px; border-radius: 8px; background: rgba(41,137,89,0.12);
+  color: var(--accent); font-weight: 800; font-size: 14px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 8px;
+}
+.cat-card .t { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+.cat-card .d { font-size: 12px; line-height: 1.85; color: var(--text-muted); text-align: justify; }
+.cat-card .apps { font-size: 11px; color: var(--icon); font-weight: 600; margin-top: 8px; }
+
+/* ─────────── Bar chart (installs) ─────────── */
+.chart { background: #ffffff; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin: 12px 0 14px 0; break-inside: avoid; }
+.chart .chart-title { font-size: 13.5px; font-weight: 700; margin-bottom: 3px; }
+.chart .chart-note { font-size: 10.5px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.7; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; max-width: 100%; }
+.bar-label { width: 108px; flex-shrink: 0; font-size: 11px; font-weight: 600; color: var(--text-primary); text-align: left; }
+.bar-track { flex: 1 1 auto; min-width: 60px; height: 16px; background: var(--table-stripe); border-radius: 8px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); }
+.bar-value { width: 66px; flex-shrink: 0; font-size: 10.5px; color: var(--text-muted); text-align: right; }
+
+/* ─────────── App profile cards (chapter 3) ─────────── */
+.app-card {
+  background: #ffffff; border: 1px solid var(--border);
+  border-right: 4px solid var(--accent);
+  border-radius: 12px; padding: 16px 18px 14px 18px;
+  margin-bottom: 13px; break-inside: avoid;
+}
+.app-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 4px; max-width: 100%; }
+.app-name { font-size: 16.5px; font-weight: 800; }
+.app-tagline { font-size: 11.5px; color: var(--text-muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px 0; max-width: 100%; }
+.chip {
+  font-size: 10px; font-weight: 600; color: var(--header-fill);
+  background: var(--table-stripe); border: 1px solid var(--border);
+  padding: 2.5px 9px; border-radius: 999px; min-width: 0; max-width: 100%;
+}
+.chip.hot { color: #ffffff; background: var(--header-fill); border-color: var(--header-fill); }
+.sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sw-col .h { font-size: 11.5px; font-weight: 800; margin-bottom: 5px; }
+.sw-col.plus .h { color: var(--success); }
+.sw-col.minus .h { color: var(--error); }
+.sw-col ul { margin: 0; padding: 0; list-style: none; }
+.sw-col li { font-size: 11.8px; line-height: 1.75; margin-bottom: 4px; padding-right: 14px; position: relative; color: var(--text-primary); }
+.sw-col.plus li::before { content: '+'; position: absolute; right: 0; font-weight: 800; color: var(--success); }
+.sw-col.minus li::before { content: '−'; position: absolute; right: 0; font-weight: 800; color: var(--error); }
+
+/* ─────────── Tables ─────────── */
+.table-block { margin: 12px 0 14px 0; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th {
+  background: var(--header-fill); color: #ffffff;
+  font-size: 10.5px; font-weight: 700; padding: 8px 7px;
+  text-align: right; line-height: 1.5;
+}
+th:first-child { border-radius: 0 8px 0 0; }
+th:last-child { border-radius: 8px 0 0 0; }
+td {
+  font-size: 10.5px; padding: 7px 7px; line-height: 1.65;
+  border-bottom: 1px solid var(--border); vertical-align: top;
+  color: var(--text-primary);
+}
+tbody tr:nth-child(odd) { background: #ffffff; }
+tbody tr:nth-child(even) { background: var(--table-stripe); }
+td.b { font-weight: 700; }
+td.ok { color: var(--success); font-weight: 700; }
+td.no { color: var(--error); font-weight: 600; }
+td.mid { color: var(--warning); font-weight: 600; }
+.tbl-caption { font-size: 10.5px; color: var(--text-muted); margin-top: 7px; line-height: 1.7; text-align: justify; }
+
+/* ─────────── Gap cards (chapter 5) ─────────── */
+.gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.gap-card {
+  background: #ffffff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px; break-inside: avoid;
+}
+.gap-num {
+  display: inline-flex; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent); color: #ffffff; font-weight: 800; font-size: 13px;
+  align-items: center; justify-content: center; margin-bottom: 8px;
+}
+.gap-card .t { font-size: 13.5px; font-weight: 800; margin-bottom: 6px; line-height: 1.5; }
+.gap-card .e { font-size: 11.5px; line-height: 1.8; color: var(--text-muted); text-align: justify; margin-bottom: 8px; }
+.gap-card .o {
+  font-size: 11.5px; line-height: 1.8; color: var(--header-fill); font-weight: 600;
+  background: rgba(41,137,89,0.07); border-radius: 8px; padding: 8px 10px; text-align: justify;
+}
+.gap-card .o::before { content: 'فرصت ما: '; color: var(--accent); font-weight: 800; }
+
+/* ─────────── Positioning / brand (chapter 6) ─────────── */
+.positioning {
+  background: var(--header-fill); color: #ffffff; border-radius: 14px;
+  padding: 20px 24px; margin: 12px 0 14px 0; break-inside: avoid;
+}
+.positioning .k { font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #cfe4d8; margin-bottom: 8px; }
+.positioning .q { font-size: 18.5px; font-weight: 800; line-height: 1.8; }
+.diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+.diff-item {
+  background: #ffffff; border: 1px solid var(--border); border-radius: 10px;
+  padding: 11px 14px; break-inside: avoid;
+}
+.diff-item .t { font-size: 12.5px; font-weight: 700; color: var(--header-fill); margin-bottom: 3px; }
+.diff-item .d { font-size: 11.3px; line-height: 1.75; color: var(--text-muted); text-align: justify; }
+.swatch-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 4px 0; max-width: 100%; break-inside: avoid; }
+.swatch { flex: 1 1 90px; min-width: 88px; max-width: 100%; border-radius: 10px; padding: 10px; color: #ffffff; }
+.swatch .h { font-size: 10px; opacity: 0.85; }
+.swatch .n { font-size: 11.5px; font-weight: 700; margin-top: 2px; }
+.swatch.dark { background: var(--header-fill); }
+.swatch.mid { background: var(--accent); }
+.swatch.light { background: var(--accent-secondary); color: #10402a; }
+.swatch.pale { background: var(--card-bg); color: var(--header-fill); border: 1px solid var(--border); }
+.swatch.ink { background: var(--text-primary); }
+
+/* ─────────── Timeline (chapter 7) ─────────── */
+.tl-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; max-width: 100%; break-inside: avoid; }
+.tl-label { width: 168px; flex-shrink: 0; font-size: 11px; font-weight: 700; }
+.tl-track { flex: 1 1 auto; min-width: 80px; height: 15px; background: var(--table-stripe); border-radius: 8px; position: relative; overflow: hidden; }
+.tl-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--cover-block), var(--accent)); }
+.tl-weeks { width: 74px; flex-shrink: 0; font-size: 10.5px; color: var(--text-muted); text-align: right; }
+
+/* ─────────── Sources ─────────── */
+.sources { margin: 10px 0; }
+.sources li { font-size: 11px; line-height: 1.9; margin-bottom: 5px; color: var(--text-muted); }
+.sources li b { color: var(--text-primary); font-weight: 700; }
+.src-url { direction: ltr; unicode-bidi: embed; font-size: 10px; color: var(--icon); word-break: break-all; }
+
+/* ─────────── Ending page ─────────── */
+.ending {
+  width: 794px; height: 1123px;
+  break-before: page;
+  overflow: hidden;
+  position: relative;
+  background: var(--page-bg);
+  padding: 120px 90px 90px 90px;
+}
+.ending .line { width: 10px; height: 88px; background: linear-gradient(180deg, var(--accent), var(--cover-block)); border-radius: 5px; margin-bottom: 26px; }
+.ending .big { font-size: 42px; font-weight: 900; line-height: 1.5; max-width: 560px; margin-bottom: 22px; }
+.ending .big .soft { color: var(--accent); }
+.ending .sub { font-size: 15px; line-height: 2; color: var(--text-muted); max-width: 520px; margin-bottom: 34px; text-align: justify; }
+.next-list { max-width: 560px; }
+.next-item { display: flex; gap: 14px; margin-bottom: 18px; break-inside: avoid; }
+.next-item .n {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px;
+  background: var(--header-fill); color: #ffffff; font-weight: 800; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+}
+.next-item .t { font-size: 14.5px; font-weight: 700; margin-bottom: 3px; }
+.next-item .d { font-size: 12.5px; line-height: 1.8; color: var(--text-muted); text-align: justify; }
+/* ─────────── Ending recap strip ─────────── */
+.recap {
+  display: flex; flex-wrap: wrap; gap: 12px; max-width: 560px;
+  border-top: 1px solid var(--border); padding-top: 24px; margin-top: 8px;
+}
+.recap-item { flex: 1 1 150px; min-width: 150px; max-width: 100%; }
+.recap-item .rt { font-size: 12px; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+.recap-item .rd { font-size: 11.3px; line-height: 1.75; color: var(--text-muted); text-align: justify; }
+
+.ending .footer-line {
+  position: absolute; bottom: 64px; right: 90px; left: 90px;
+  display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted);
+  border-top: 1px solid var(--border); padding-top: 16px;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ COVER ═══════════════ -->
+<div class="cover">
+  <div class="cover-bg"></div>
+  <div class="cover-line"></div>
+  <div class="cover-kicker">گزارش تحقیق بازار · ویرایش نخست</div>
+  <div class="cover-title">حسابداری <span class="soft">شخصی</span><br>در ایران</div>
+  <div class="cover-summary">تحلیل عمیق اپلیکیشن‌های مدیریت مالی شخصی ایرانی: نقشه کامل بازار، پروفایل و نقاط قوت و ضعف بیش از ۱۳ ابزار، شکاف‌های مستند بازار و نقشه راه هشت‌فازی برای ساخت برند و وب‌اپ اختصاصی خودمان.</div>
+  <div class="cover-meta">
+    نسخه <b>۱.۰</b> — آبان ۱۴۰۵<br>
+    سند استراتژی شخصی · مصرف داخلی
+  </div>
+  <div class="cover-statrow">
+    <div class="cover-stat"><div class="n">۱۳+</div><div class="l">اپ ایرانی تحلیل‌شده</div></div>
+    <div class="cover-stat"><div class="n">۸</div><div class="l">شکاف مستند بازار</div></div>
+    <div class="cover-stat"><div class="n">۸</div><div class="l">فاز نقشه راه</div></div>
+    <div class="cover-stat"><div class="n">۱۶</div><div class="l">هفته برآوردی تا انتشار عمومی</div></div>
+  </div>
+  <div class="cover-footer">تدوین بر پایه صفحات رسمی فروشگاه‌ها، مقالات معرفی و نظرات واقعی کاربران · آبان ۱۴۰۵</div>
+</div>
+
+<!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+<div class="main-content">
+
+<!-- ───────── خلاصه مدیریتی ───────── -->
+<div class="chapter-header">
+  <div class="section-tag">خلاصه مدیریتی</div>
+  <h2 class="section-title">چهار جمع‌بندی که همه سند را خلاصه می‌کنند</h2>
+  <div class="divider"></div>
+</div>
+
+<p class="body-text lead"><b>یکم — بازار بزرگ است، محصولات نابالغ.</b> مدیریت مالی شخصی در ایران از یک «آپشن لوکس» به یک نیاز بقا تبدیل شده است؛ تورم بالا و ناپایداری درآمد باعث شده مردم به‌طور جدی دنبال دیدن اینکه پولشان کجا می‌رود باشند. گزارش سال ۱۴۰۳ فروشگاه بازار نشان می‌دهد دسته «امور مالی» بیشترین رشد نصب را در میان همه دسته‌ها داشته و نئوبانک‌ها تا پایان آن سال بیش از ۲۰ میلیون کاربر یکتا جذب کرده‌اند. اما وقتی به خودِ محصولات نگاه می‌کنیم، تصویر متفاوت است: اکثر اپ‌های فارسی یا مرده‌اند، یا خوابیده‌اند، یا در ساده‌ترین حالت «دفتر خرج» مانده‌اند.</p>
+
+<p class="body-text"><b>دوم — رهبر بازار پیر، رقیب جدی جوان.</b> پارمیس همراه با اختلاف بزرگ رهبر است (۴.۷ از ۵ با بیش از ۴۸ هزار رأی در بازار) و یک «حسابداری خانوادگی کامل» است؛ اما زبان آن زبان حسابدار است، نه کاربر امروز. نسل جدید مثل پولکی (۹۲ هزار نصب، رابط مدرن، مدیریت طلا و دلار و رمزارز) مسیر درستی رفته اما هنوز تک‌دستگاهی و آفلاین است و ویژگی‌های کلیدی‌اش پشت درگاه پرداخت قفل شده‌اند.</p>
+
+<p class="body-text"><b>سوم — شکاف‌ها مشترک و تکرارشونده‌اند.</b> هشت شکاف تقریباً در همه محصولات دیده می‌شود: نبود نسخه وب و دسکتاپ، خطر مرگ اپ و گروگان‌گرفتن داده‌ها، نبود همگام‌سازی چنددستگاهی، غیبت تقریباً کامل هوش مصنوعی، شکنندگی ثبت خودکار پیامکی، ضعف در چند-ارزی و واقعیت تورم، اشتراک‌گذاری خانوادگی سطح پایین، و مدل‌های درآمدی ناسازگار با کاربر. این فهرست، دقیقاً «چک‌لیست محصول ما» است.</p>
+
+<p class="body-text"><b>چهارم — پنجره فرصت برای یک وب‌اپ هوشمند باز است.</b> هیچ بازیگر فارسی‌زبانی ندارد: نسخه وبِ همیشه‌دسترس + ثبت تراکنش با زبان طبیعی فارسی + بینش‌های هوشمند + وعده صریح «داده‌ات همیشه مال توست و قابل خروجی است». نقشه راه این سند این ایده را در ۸ فاز و حدود ۱۶ هفته به یک MVP واقعی می‌رساند؛ فاز ۰ (همین ریسرچ) با این سند بسته می‌شود.</p>
+
+<div class="stat-grid">
+  <div class="stat-box"><div class="n">۵۰ <span class="unit">میلیون</span></div><div class="l">کاربر فعال ماهانه فروشگاه بازار (گزارش سال ۱۴۰۳)</div></div>
+  <div class="stat-box"><div class="n">اول</div><div class="l">رتبه رشد نصب دسته «امور مالی» در میان همه دسته‌ها — سال ۱۴۰۳</div></div>
+  <div class="stat-box"><div class="n">۲۰ <span class="unit">میلیون+</span></div><div class="l">کاربر یکتای نئوبانک‌ها تا پایان ۱۴۰۳</div></div>
+  <div class="stat-box"><div class="n">۴.۷<span class="unit">/۵</span></div><div class="l">امتیاز پارمیس همراه با بیش از ۴۸٫۶ هزار رأی — بالاترین در بازار</div></div>
+</div>
+
+<div class="callout">
+  <div class="t">پیام کلیدی سند</div>
+  <p>رقبا یا مردند، یا خوابند، یا مسئله اشتباهی را حل می‌کنند. برندهِ بعدیِ این بازار به یک اپ بیشتر در فروشگاه نیاز ندارد؛ به یک «دستیار مالی وب‌محور و هوشمند» نیاز دارد که داده را مالک کاربر می‌داند. این سند دقیقاً برای ساختن همان است.</p>
+</div>
+
+<!-- ───────── فصل ۱ ───────── -->
+<div class="chapter-header">
+  <div class="section-tag">فصل ۱</div>
+  <h2 class="section-title">چرا مدیریت مالی شخصی، و چرا الان؟</h2>
+  <div class="divider"></div>
+</div>
+
+<h3 class="sub">۱.۱ — اقتصاد خانوار ایرانی، مسئله را جدی کرده است</h3>
+<p class="body-text">در یک اقتصاد با تورم بالا و نوسان شدید قیمت ارز و طلا، فاصله بین «درآمد» و «قدرت خرید» هر ماه مبهم‌تر می‌شود. بسیاری از خانواده‌ها دقیقاً نمی‌دانند سهم خوراک، حمل‌ونقل و تفریح از هزینه‌هایشان چقدر است و آخر ماه با تعجب به مانده حساب نگاه می‌کنند. مقاله مدیریت مالی دیجی‌کالا مگ این وضعیت را به‌خوبی خلاصه می‌کند: «تا چشم بر هم بزنیم، بخش زیادی از حقوق ناپدید شده است». این ابهام، خواسته اصلی کاربر ایرانی را تعریف می‌کند: نه یک دفتر حسابداری کلاسیک، بلکه یک پاسخ سریع به «پولم کجا رفت؟» و «از این ماه به بعد چقدر می‌توانم خرج کنم؟».</p>
+
+<h3 class="sub">۱.۲ — سمتِ عرضه: فین‌تک داغ‌ترین دسته فروشگاه‌هاست</h3>
+<p class="body-text">گزارش سال ۱۴۰۳ فروشگاه بازار (با ۵۰ میلیون کاربر فعال ماهانه) نشان می‌دهد در میان تمامی دسته‌بندی‌های برنامه‌ها، حوزه امور مالی بیشترین رشد را در تعداد نصب داشته است — یعنی تقاضا قوی است و کاربر ایرانی به سمت ابزارهای مالی دیجیتال آمده است. موازی با آن، نئوبانک‌ها تا پایان ۱۴۰۳ بیش از ۲۰ میلیون کاربر یکتا جذب کردند؛ یعنی عادت «امور مالی روی گوشی» در سطح انبوه شکل گرفته است. این موج، زمینه‌ساز پذیرش یک PFM (Personal Finance Management) فارسی است.</p>
+
+<h3 class="sub">۱.۳ — چرا ابزارهای جهانی برای ایرانی‌ها جواب نمی‌دهند؟</h3>
+<p class="body-text">ابزارهای قدرتمند جهانی مثل YNAB، PocketGuard و Spendee دو مشکل بنیادی برای کاربر ایرانی دارند. اول، مسئله دسترسی و پرداخت: خرید اشتراک بین‌المللی با کارت‌های ایرانی دشوار است و قابلیت اتصال مستقیم به حساب بانکی (مثل Spendee) در ایران اصلاً کار نمی‌کند — دیجی‌کالا مگ صریحاً این را یادآوری می‌کند. دوم، عدم بومی‌سازی: تقویم شمسی، مقیاس تومان، دسته‌بندی‌های آشنای ایرانی (عیدانه، قرض‌الحسنه، صندوق خانوادگی)، و پیامک‌های بانکی فارسی هیچ‌کدام در این ابزارها معنا ندارد. نتیجه، یک «حفره بومی‌سازی» است که فقط ابزارهای ایرانی می‌توانند پرش کنند — و همان‌طور که خواهیم دید، پر کردن کاملش هنوز شروع نشده است.</p>
+
+<h3 class="sub">۱.۴ — لحظه درست برای ورود</h3>
+<p class="body-text">سه موج هم‌زمان، الان را به لحظه درست تبدیل می‌کند: موج اول، بلوغ تقاضا (کاربر تمرین‌کرده اپ‌های بانکی است و دیگر از ثبت تراکنش نمی‌ترسد). موج دوم، فرسایش عرضه (اپ‌های شاخص نسل قبل یا متوقف شده‌اند مثل نیو، یا سال‌هاست بدون به‌روزرسانی‌اند مثل فانوس؛ کاربر ناامید شده و منتظر گزینه جدی است). موج سوم، بلوغ فناوری: مدل‌های زبانی امروز می‌توانند یک جمله فارسی محاوره‌ای مثل «دویست تومن تاکسی دادم» را به تراکنش دسته‌بندی‌شده تبدیل کنند — قابلیتی که هیچ‌یک از رقبای موجود ارائه نمی‌دهند. ورودِ زودتر یعنی چسبیدن برند جدید به قابلیت «دستیار مالی هوشمند» قبل از دیگران.</p>
+
+<!-- ───────── فصل ۲ ───────── -->
+<div class="chapter-header">
+  <div class="section-tag">فصل ۲</div>
+  <h2 class="section-title">نقشه بازار: چهار دسته ابزار</h2>
+  <div class="divider"></div>
+</div>
+
+<p class="body-text">برای اینکه تحلیل فصل بعد منظم باشد، ابزارهای فارسی را در چهار دسته جای می‌دهیم. این دسته‌بندی بر اساس قابلیت اصلی محصول است، نه اسمی که سازنده رویش گذاشته؛ چون خیلی از اپ‌ها خودشان را «مدیریت مالی» می‌نامند اما در عمل فقط دفتر خرج‌اند یا برعکس، یک نرم‌افزار کسب‌وکار هستند که حالت شخصی هم دارد.</p>
+
+<div class="cat-grid">
+  <div class="cat-card">
+    <div class="icon-dot">A</div>
+    <div class="t">اپ‌های جامع مدیریت مالی شخصی (PFM)</div>
+    <div class="d">قلب بازار. ثبت درآمد/هزینه، حساب‌های متعدد، بودجه، بدهی‌ها، گزارش نموداری و در نسخه‌های جدیدتر ثبت خودکار از پیامک بانک. هدفشان «حسابدارِ خانواده» بودن است.</div>
+    <div class="apps">پارمیس همراه · پولکی · فانوس · کیف پول محک · موج</div>
+  </div>
+  <div class="cat-card">
+    <div class="icon-dot">B</div>
+    <div class="t">اپ‌های ساده ثبت مخارج</div>
+    <div class="d">یک وظیفه را خیلی خوب انجام می‌دهند: ثبت سریع خرج روزانه با دسته‌بندی و گزارش پایه. کم‌حجم، ارزان یا رایگان، و برای کاربری که گله‌ی «پیچیده است» می‌کند، ساخته شده‌اند.</div>
+    <div class="apps">دخل و خرج · پولامو چیکار کردم؟ · باجت · پول‌نگار · حساب‌یار</div>
+  </div>
+  <div class="cat-card">
+    <div class="icon-dot">C</div>
+    <div class="t">ابزارهای تخصصی مالی</div>
+    <div class="d">به جای «همه‌چیز یک‌جا»، یک درد مشخص را درمان می‌کنند: اقساط و چک‌ها، صندوق‌های قرض‌الحسنه خانوادگی، یا تنخواه. بازار کوچک‌تر اما وفادارتر.</div>
+    <div class="apps">مالیار · همیان · صندوقک · تنخواه‌گردان</div>
+  </div>
+  <div class="cat-card">
+    <div class="icon-dot">D</div>
+    <div class="t">سرویس‌های وب و چنددستگاهی</div>
+    <div class="d">اقلیت کوچک بازار که از قفل «فقط موبایل» عبور کرده‌اند: نسخه وب یا PWA دارند و از چند دستگاه قابل استفاده‌اند. این همان جایی است که فصل ۵ بزرگ‌ترین فرصت را نشان می‌دهد.</div>
+    <div class="apps">پول‌نگار (وب+PWA) · کیف پول هوشمند محک (وب) · کیوبیفای (وب)</div>
+  </div>
+</div>
+
+<div class="chart">
+  <div class="chart-title">تعداد نصب اعلام‌شده در فروشگاه‌های اندرویدی</div>
+  <div class="chart-note">مقیاس: هزار نصب. داده‌ها از صفحات رسمی فروشگاه و مقالات معرفی؛ تاریخ گزارش هر عدد با دیگران متفاوت است (دو تا چهار سال اخیر) و صرفاً برای درک ترتیب اندازه‌هاست، نه مقایسه دقیق.</div>
+  <div class="bar-row"><div class="bar-label">فانوس</div><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><div class="bar-value">~۱۰۰ هزار</div></div>
+  <div class="bar-row"><div class="bar-label">پولکی</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div class="bar-value">۹۲ هزار</div></div>
+  <div class="bar-row"><div class="bar-label">خانه ما</div><div class="bar-track"><div class="bar-fill" style="width:20%"></div></div><div class="bar-value">۲۰ هزار</div></div>
+  <div class="bar-row"><div class="bar-label">کیف پول محک</div><div class="bar-track"><div class="bar-fill" style="width:20%"></div></div><div class="bar-value">۲۰ هزار+</div></div>
+  <div class="bar-row"><div class="bar-label">موج</div><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><div class="bar-value">۱۰ هزار</div></div>
+  <div class="bar-row"><div class="bar-label">دخل و خرج</div><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><div class="bar-value">۱۰ هزار</div></div>
+  <div class="bar-row"><div class="bar-label">پولامو</div><div class="bar-track"><div class="bar-fill" style="width:10%"></div></div><div class="bar-value">۱۰ هزار</div></div>
+  <div class="bar-row"><div class="bar-label">باجت</div><div class="bar-track"><div class="bar-fill" style="width:1.5%"></div></div><div class="bar-value">~۱ هزار</div></div>
+  <div class="chart-note" style="margin-top:10px; margin-bottom:0;">پارمیس همراه در این نمودار نیست: عدد نصب جاری‌اش در صفحه فروشگاه منتشر نمی‌شود، اما با بیش از ۴۸٫۶ هزار رأی ثبت‌شده در بازار، با اختلاف پررأی‌ترین اپ این فهرست است و مقالات مستقل آن را «بیش از دو میلیون دانلود» توصیف کرده‌اند.</div>
+</div>
+
+<!-- ───────── فصل ۳ ───────── -->
+<div class="chapter-header">
+  <div class="section-tag">فصل ۳</div>
+  <h2 class="section-title">تحلیل تفصیلی: پروفایل اپ‌های اصلی</h2>
+  <div class="divider"></div>
+</div>
+
+<p class="body-text">هر پروفایل سه بخش دارد: شناسنامه (داده صفحات رسمی فروشگاه‌ها در تاریخ گزارش)، نقاط قوت، و نقاط ضعف. ضعف‌ها فقط از دو منبع گرفته شده‌اند: مستندات و مقالات معرفی، و نظرات واقعی کاربران. برای هر ادعای «ضعف»، ردی از منبع در فصل منابع هست. ترتیب، از پرتاثیرترین‌ها شروع می‌شود.</p>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">پارمیس همراه</span><span class="app-tagline">حسابدار سنتیِ خانواده — رهبر بازار</span></div>
+  <div class="chips"><span class="chip hot">امتیاز ۴.۷ از ۵</span><span class="chip hot">بیش از ۴۸٫۶ هزار رأی</span><span class="chip">اندروید + iOS + نسخه ابری</span><span class="chip">رایگان</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">نقاط قوت</div>
+      <ul>
+        <li>بزرگ‌ترین و باسابقه‌ترین بازیگر این بازار؛ اعتماد برند دو دهه حسابداری پارمیس پشتش است.</li>
+        <li>پوشش واقعاً کامل: حساب بانکی، نقد، حساب ارزی، مدیریت چک، بدهی/طلب اعضای خانواده و یادآور پرداخت‌های معوق.</li>
+        <li>گزارش‌های مالی دقیق و خلاصه ماهانه؛ نزدیک‌ترین تجربه به حسابداری رسمی بین همه اپ‌ها.</li>
+        <li>نسخه ابری و رصد مانده بانک‌ها و صندوق‌ها؛ همگام‌سازی نسبتاً بهتر از رقبا.</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">نقاط ضعف</div>
+      <ul>
+        <li>زبان رابط کاربری «حسابدارانه» است؛ مقالات مستقل هم می‌گویند برای کاربر تازه‌کار پیچیده به نظر می‌رسد.</li>
+        <li>طراحی و UX نسل قبل؛ حس محصول دهه میلادی گذشته با اینکه امکانات جدی دارد.</li>
+        <li>هیچ ردی از هوش‌مصنوعی یا ثبت هوشمند وجود ندارد؛ ثبت دستی حاکم است.</li>
+        <li>قابلیت ثبت خودکار پیامک بانکی محدود و تجربه موبایل-first آن با وبِ ضعیف رقابت می‌کند.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">پولکی</span><span class="app-tagline">نسل جدید، نزدیک‌ترین به زبان کاربر امروز</span></div>
+  <div class="chips"><span class="chip hot">۹۲ هزار نصب</span><span class="chip">امتیاز ۴.۳ از ۱٫۱۳۵ رأی</span><span class="chip">اندروید + iOS</span><span class="chip">پرداخت درون‌برنامه‌ای</span><span class="chip">بروزرسانی آبان ۱۴۰۵</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">نقاط قوت</div>
+      <ul>
+        <li>ثبت خودکار مخارج با خواندن پیامک بانکی؛ کاربر فقط دسته‌بندی را تأیید می‌کند.</li>
+        <li>مدیریت دارایی‌های غیرنقدی — طلا، دلار و رمزارز — که تقریباً هیچ رقیبی ندارد؛ پاسخ درست به واقعیت پس‌انداز ایرانی.</li>
+        <li>بودجه‌بندی هوشمند با سقف برای هر دسته و هشدار قبل از خرج اضافه؛ یادآور چک و قسط.</li>
+        <li>خروجی اکسل، داده کاملاً آفلاین روی دستگاه، قفل برنامه و نسخه iOS فعال.</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">نقاط ضعف</div>
+      <ul>
+        <li>مدل freemium: قابلیت‌های کلیدی پشت پرداخت درون‌برنامه‌ای‌اند و نسخه رایگان عملاً دمو است.</li>
+        <li>داده آفلاینِ تک‌گوشی یعنی بدون همگام‌سازی ابری؛ تعویض گوشی = مهاجرت دستی و ریسک ازدست‌دادن تاریخچه.</li>
+        <li>نسخه وب/دسکتاپ ندارد؛ هیچ سرویس ابری متمرکزی وعده داده نشده.</li>
+        <li>امتیاز ۴.۳ پایین‌تر از رهبر بازار؛ نظرات به سادگی بودجه رایگان و گاهی خطاهای ثبت‌های خودکار اشاره می‌کنند.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">فانوس</span><span class="app-tagline">PFM + ناظر سرمایه‌گذاری</span></div>
+  <div class="chips"><span class="chip hot">~۱۰۰ هزار نصب</span><span class="chip">اندروید + iOS</span><span class="chip">رایگان با نسخه پیشرفته</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">نقاط قوت</div>
+      <ul>
+        <li>ثبت خودکار و رایگان تراکنش‌ها از پیامک‌های بانکی با پیشنهاد اقتصادی بر پایه داده.</li>
+        <li>نمایش ارزش روز دارایی‌های ارزی، طلا و بورس — پیوند بین خرج روزانه و سرمایه.</li>
+        <li>تحلیل کدال و پیشنهاد سهام برای کاربرِ به‌دنبال سرمایه‌گذاری؛ ترکیب PFM با ناظر بورس بین رقبا کم‌نظیر است.</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">نقاط ضعف</div>
+      <ul>
+        <li>علائم رکود محصول: کاربران در دیدگاه‌ها نوشته‌اند «خیلی وقتی است آپدیت نداده و با خطا مواجه شده است».</li>
+        <li>قابلیت‌های پیشرفته پشت نسخه پولی؛ تجربه رایگان محدود و گاهی مزاحم.</li>
+        <li>تمرکز دوگانه (خرج + بورس) رابط را شلوغ کرده؛ برای کاربری که فقط می‌خواهد خرج ثبت کند سنگین است.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">کیف پول محک</span><span class="app-tagline">کهنه‌کار چندسکویی با وب</span></div>
+  <div class="chips"><span class="chip hot">۲۰ هزار+ نصب</span><span class="chip">اندروید + iOS + وب‌اپ</span><span class="chip">پرداخت درون‌برنامه‌ای</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">نقاط قوت</div>
+      <ul>
+        <li>سه‌سکویی کامل (اندروید، iOS، وب) از سال‌های قبل؛ وب‌اپ «کیف پول هوشمند» آن چند کیف پول با ارزهای مختلف (ریال، تومان، دلار) و اشتراک با اعضای خانواده می‌دهد.</li>
+        <li>پوشش خوب امور پایه: هزینه/درآمد، قرض و بدهی با موعد، ثبت چک با یادآور سررسید، بودجه‌بندی و نمودار تحلیل الگو.</li>
+        <li>کاربری روان و ساده که در جمع‌بندی‌های مقایسه‌ای هم به‌عنوان مزیت آمده است.</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">نقاط ضعف</div>
+      <ul>
+        <li>محصول نسل قبل از موج ثبت خودکار پیامکی؛ ثبت دستی محور است.</li>
+        <li>نسخه حرفه‌ای پولی برای دسترسی کامل؛ رابط قدیمی‌تر نسبت به نسل جدید.</li>
+        <li>بدون هوش مصنوعی و بینش خودکار؛ گزارش‌ها استاتیک‌اند.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">موج</span><span class="app-tagline">پل بین حساب شخصی و کسب‌وکار خرد</span></div>
+  <div class="chips"><span class="chip hot">۱۰ هزار نصب</span><span class="chip">اندروید</span><span class="chip">نیمه‌رایگان</span><span class="chip">وب‌سایت فعال: mowjapp.ir</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">نقاط قوت</div>
+      <ul>
+        <li>واسط یکپارچه شخصی + کسب‌وکار خرد: وام، اقساط، چک، فاکتور، انبار و بدهی‌ها در یک اپ.</li>
+        <li>ثبت خودکار تراکنش از پیامک بانک‌ها + مدیریت کارت‌های بانکی و نشانک‌های دسته‌بندی.</li>
+        <li>پشتیبان‌گیری ابری یا حافظه دستگاه و گزارش‌گیری جامع؛ تیم پشتیبانی فعال که در مقالات هم ستایش شده.</li>
+        <li>فلسفه محصول درست: «هدف فقط ثبت اعداد نیست؛ رساندن نظم و آرامش مالی است».</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">نقاط ضعف</div>
+      <ul>
+        <li>پایگاه کاربر کوچک (۱۰ هزار نصب)؛ اعتماد انبوه هنوز ساخته نشده.</li>
+        <li>نیمه‌رایگان بودن مرزهای قابلیت‌ها را مبهم می‌کند.</li>
+        <li>حجم زیاد قابلیت‌های کسب‌وکاری برای کاربر صرفاً شخصی، منحنی یادگیری را بالا می‌برد.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">دخل و خرج (تاکسی‌اپس)</span><span class="app-tagline">ساده، پایدار، بدون هیاهو</span></div>
+  <div class="chips"><span class="chip hot">۱۰ هزار نصب</span><span class="chip">اندروید + iOS (سیبچه)</span><span class="chip">رایگان</span><span class="chip">Play Store فعال</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">نقاط قوت</div>
+      <ul>
+        <li>ثبت نامحدود هزینه/درآمد با دسته‌بندی آماده؛ بدون نیاز به تایپ دستی.</li>
+        <li>پیگیری بدهی/طلب، بودجه، تعریف افراد و حساب بانکی و انتقال وجه بین حساب‌ها.</li>
+        <li>وعده مهم: پس از حذف اپ یا تغییر گوشی، «نیاز به پرداخت مجدد ندارد» — سیاست درست در برابر ریسک مرگ داده.</li>
+        <li>نمودارهای تحلیلی وضعیت مالی؛ اندازه کوچک و بدون تبلیغ مزاحم.</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">نقاط ضعف</div>
+      <ul>
+        <li>رابط کاربری قدیمی و بدون جذابیت بصری برای نسل Z.</li>
+        <li>ثبت خودکار پیامکی ندارد؛ همه‌چیز دستی است.</li>
+        <li>بدون همگام‌سازی ابری چنددستگاهی؛ داده روی گوشی می‌ماند.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">پول‌نگار</span><span class="app-tagline">تنها اپ با وب کامل + PWA</span></div>
+  <div class="chips"><span class="chip">اندروید + iOS (PWA) + وب دسکتاپ</span><span class="chip">رایگان</span><span class="chip">سازنده: سویت‌سافت</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">نقاط قوت</div>
+      <ul>
+        <li>منحصربه‌فردترین ویژگی بازار: «تنها گزینه فارسی که هم نسخه اندروید دارد، هم PWA برای iOS و هم نسخه تحت وب دسکتاپ» — نقل مستقیم از کاربر در دیجی‌کالا مگ.</li>
+        <li>وعده‌ی ماندگاری داده: «هیچ‌وقت اطلاعات ثبت‌شده پاک نمی‌شود» — همان اعتمادی که رقبا نداده‌اند.</li>
+        <li>مدیریت قرض و بدهی به‌صورت اشتراکی با طرف‌حساب‌ها؛ مانده واقعی بعد از هر پرداخت.</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">نقاط ضعف</div>
+      <ul>
+        <li>شناخته‌شدگی و مقیاس کوچک؛ در هیچ مقاله مقایسه‌ای شاخص نیست.</li>
+        <li>بدون ثبت خودکار پیامکی و بدون لایه هوشمند؛ تجربه صرفاً دفتر دیجیتال است.</li>
+        <li>گزارش‌ها و بودجه‌بندی پایه؛ عمق تحلیلی رقبای بزرگ را ندارد.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">پولامو چیکار کردم؟</span><span class="app-tagline">مینیمالیست دوست‌داشتنی</span></div>
+  <div class="chips"><span class="chip hot">۱۰ هزار نصب</span><span class="chip">اندروید</span><span class="chip">رایگان</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">نقاط قوت</div>
+      <ul>
+        <li>ظاهر ساده و رابط کاربری که کاربر چندساله دارد — مقاله معرفی‌کننده هم نویسنده‌اش کاربر چندساله این اپ است.</li>
+        <li>اتصال به پیامک‌های بانکی و ثبت خودکار تراکنش‌ها.</li>
+        <li>تعریف حساب‌های بانکی نامحدود و نمایش مانده، طلب و بدهی.</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">نقاط ضعف</div>
+      <ul>
+        <li>سادگی در مرز کمبود: بودجه‌بندی عمیق، گزارش پیشرفته و دارایی غیرنقدی ندارد.</li>
+        <li>بدون وب و بدون همگام‌سازی؛ مقیاس کوچک و بدون نشانه رشد.</li>
+        <li>هیچ نوآوری هوشمندی اضافه نشده؛ عقب‌ماندگی تدریجی نسبت به نسل جدید.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">حساب‌یار</span><span class="app-tagline">دفتر ساده هزینه و درآمد</span></div>
+  <div class="chips"><span class="chip">اندروید</span><span class="chip">فارسی</span><span class="chip">دسته امور مالی</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">نقاط قوت</div>
+      <ul>
+        <li>ثبت همه تراکنش‌های روزانه با دسته‌بندی اختصاصی هزینه و درآمد.</li>
+        <li>گزارش‌گیری برای دید دقیق وضعیت مالی؛ ادعای اصلی صفحه فروشگاه.</li>
+        <li>سادگی و سبکی برای کاربری که فقط دفتر می‌خواهد.</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">نقاط ضعف</div>
+      <ul>
+        <li>تمایز کم نسبت به ده‌ها اپ مشابه در همان دسته B.</li>
+        <li>بدون وب، بدون همگام‌سازی و بدون لایه هوشمند.</li>
+        <li>داده شفاف نصب/امتیاز و نشانه‌های رشد فعال در دسترس نیست — خودش نشانه ضعف بازاریابی است.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">مالیار</span><span class="app-tagline">دفتر اقساط، وام و چک — تازه‌وارد جدی</span></div>
+  <div class="chips"><span class="chip hot">امتیاز ۵.۰ از ۲۹ رأی</span><span class="chip">۵۰۰ نصب</span><span class="chip">اندروید</span><span class="chip">کاملاً رایگان</span><span class="chip">بروزرسانی مهر ۱۴۰۵</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">نقاط قوت</div>
+      <ul>
+        <li>تمرکز درست روی درد واقعی: «چند تا قسط و چک داری و نمی‌دونی کدوم رو کی باید بدی؟».</li>
+        <li>اسکن شناسه صیاد با دوربین از بارکد چک؛ ثبت دسته‌ای چک با وضعیت (در جریان، پاس‌شده، برگشتی، باطل).</li>
+        <li>کاملاً آفلاین با رمز ورود؛ ثبت نامحدود وام رایگان (ضد الگوی freemium رقبا)، تقویم مالی شمسی، گزارش ظرفیت وام جدید و تم تاریک کامل.</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">نقاط ضعف</div>
+      <ul>
+        <li>تازه‌وارد با مقیاس بسیار کوچک (۵۰۰ نصب)؛ اعتبار اجتماعی هنوز ندارد.</li>
+        <li>صادقانه اعلام کرده: به سامانه صیاد وصل نیست و استعلام نمی‌گیرد — فقط ثبت است.</li>
+        <li>فقط چک‌های پرداختی پشتیبانی می‌شود؛ پوشش یک‌طرفه.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="app-card">
+  <div class="app-head"><span class="app-name">نیو</span><span class="app-tagline">مطالعه موردی: مرگ یک اپ دوست‌داشتنی</span></div>
+  <div class="chips"><span class="chip">iOS + اندروید (سابقاً)</span><span class="chip">وضعیت: غیرفعال</span></div>
+  <div class="sw-grid">
+    <div class="sw-col plus">
+      <div class="h">چه چیزی داشت؟</div>
+      <ul>
+        <li>رابط کاربری مدرن و جذاب که در مقالات معرفی ستایش می‌شد.</li>
+        <li>چند حساب مالی، یادآوری پرداخت‌ها و نسخه رایگان خوب.</li>
+        <li>چند سال، یکی از گزینه‌های پیش‌فرض کاربران iOS فارسی‌زبان بود.</li>
+      </ul>
+    </div>
+    <div class="sw-col minus">
+      <div class="h">چه شد؟</div>
+      <ul>
+        <li>کاربران می‌نویسند: «سال‌هاست وجود خارجی ندارد و کاربران قدیمیش هنوز سرِ گم‌اند» — یعنی تاریخچه مالی دست‌نیافتنی مانده.</li>
+        <li>«چند ماهی است به پیامک‌ها وصل نمی‌شود و خراب شده» و «سایتش بالا نمی‌آید و در بازار هم نیست».</li>
+        <li>درس بزرگ برای ما: در محصول مالی، «داده تو کجاست اگر ما نباشیم؟» باید پاسخ شفاف داشته باشد — وگرنه اعتماد یک‌شبه می‌سوزد.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h3 class="sub">۳.۱۱ — ذکر کوتاه بقیه نقشه</h3>
+<p class="body-text">برای کامل بودن تصویر: «خانه ما» (اپ مدیریت مالی خانواده محبوبِ متصل به مسابقه تلویزیونی، ~۲۰ هزار نصب) دیگر در کافه بازار قابل دسترس نیست و نشانه دیگری بر شکنندگی اپ‌های متکی به حمایت‌گر است؛ «باجت» (~۱ هزار نصب) مینیمال‌ترین ثبت‌کننده با پشتیبانی پیامک بانکی است؛ «دخل» (کام.بوکس‌دخل) تازه در آبان ۱۴۰۵ منتشر شده با قیمت غیرمعمول ~۱٫۳۶۹ میلیون تومان — الگوی قیمتی‌ای که بازار را به رقبای رایگان می‌سپارد؛ در دسته تخصصی‌ها «همیان» و «صندوقک» صندوق‌های قرض‌الحسنه خانوادگی را مدیریت می‌کنند و «تنخواه‌گردان» سرویس ابری گزارش هزینه است؛ و «کیوبیفای» به گفته کاربران یک اپ وب بومی با دو ماه رایگان اول است. جمع نکته: تنوع زیاد، اما هیچ‌کدام پازل کامل نمی‌شوند.</p>
+
+<!-- ───────── فصل ۴ ───────── -->
+<div class="chapter-header">
+  <div class="section-tag">فصل ۴</div>
+  <h2 class="section-title">جدول مقایسه جامع</h2>
+  <div class="divider"></div>
+</div>
+
+<p class="body-text">جدول زیر همه اپ‌های تحلیل‌شده را روی هشت معیار کنار هم می‌گذارد. معیارها همان چیزی هستند که در فصل ۵ شکاف‌ها را می‌سازند: اگر در یک ستون تقریباً همه سلول‌ها قرمز یا خاکستری باشند، یعنی آن ستون «زمین بکر» محصول جدید ماست.</p>
+
+<div class="table-block">
+<table>
+  <colgroup><col style="width:15%"><col style="width:13%"><col style="width:13%"><col style="width:10%"><col style="width:9%"><col style="width:10%"><col style="width:16%"><col style="width:14%"></colgroup>
+  <thead>
+    <tr><th>اپلیکیشن</th><th>نصب / رأی</th><th>پلتفرم‌ها</th><th>ثبت خودکار پیامک</th><th>نسخه وب</th><th>همگام‌سازی چنددستگاهی</th><th>مدل قیمت</th><th>وضعیت فعلی</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="b">پارمیس همراه</td><td>۴۸٫۶K+ رأی (۴.۷)</td><td>اندروید، iOS، ابری</td><td class="mid">محدود</td><td class="mid">وب‌سرویس پارمیس</td><td class="ok">دارد</td><td>رایگان (نسخه حرفه‌ای)</td><td class="ok">فعال</td></tr>
+    <tr><td class="b">پولکی</td><td>۹۲K نصب (۴.۳)</td><td>اندروید، iOS</td><td class="ok">دارد</td><td class="no">ندارد</td><td class="no">ندارد (آفلاین)</td><td>Freemium درون‌برنامه‌ای</td><td class="ok">فعال</td></tr>
+    <tr><td class="b">فانوس</td><td>~۱۰۰K نصب</td><td>اندروید، iOS</td><td class="ok">دارد</td><td class="no">ندارد</td><td class="no">ندارد</td><td>رایگان + نسخه پیشرفته</td><td class="no">خفته (کم‌بروزرسانی)</td></tr>
+    <tr><td class="b">کیف پول محک</td><td>۲۰K+ نصب</td><td>اندروید، iOS، وب</td><td class="no">ندارد</td><td class="ok">دارد</td><td class="ok">دارد (وب)</td><td>Freemium درون‌برنامه‌ای</td><td class="ok">فعال</td></tr>
+    <tr><td class="b">موج</td><td>۱۰K نصب</td><td>اندروید</td><td class="ok">دارد</td><td class="no">ندارد</td><td class="mid">پشتیبان ابری</td><td>نیمه‌رایگان</td><td class="ok">فعال</td></tr>
+    <tr><td class="b">دخل و خرج</td><td>۱۰K نصب</td><td>اندروید، iOS</td><td class="no">ندارد</td><td class="no">ندارد</td><td class="no">ندارد</td><td>رایگان</td><td class="ok">فعال</td></tr>
+    <tr><td class="b">پول‌نگار</td><td>مقیاس کوچک</td><td>اندروید، iOS(PWA)، وب</td><td class="no">ندارد</td><td class="ok">دارد</td><td class="ok">دارد (وب)</td><td>رایگان</td><td class="ok">فعال</td></tr>
+    <tr><td class="b">پولامو</td><td>۱۰K نصب</td><td>اندروید</td><td class="ok">دارد</td><td class="no">ندارد</td><td class="no">ندارد</td><td>رایگان</td><td class="mid">فعالِ کم‌تحرک</td></tr>
+    <tr><td class="b">حساب‌یار</td><td>نامشخص</td><td>اندروید</td><td class="no">ندارد</td><td class="no">ندارد</td><td class="no">ندارد</td><td>رایگان</td><td class="mid">فعالِ کم‌تحرک</td></tr>
+    <tr><td class="b">مالیار</td><td>۵۰۰ نصب (۵.۰)</td><td>اندروید</td><td class="no">ندارد</td><td class="no">ندارد</td><td class="no">آفلاین</td><td>کاملاً رایگان</td><td class="ok">فعال</td></tr>
+    <tr><td class="b">نیو</td><td>سابقاً فعال</td><td>iOS، اندروید</td><td class="mid">قبلاً داشت</td><td class="no">ندارد</td><td class="no">ندارد</td><td>Freemium</td><td class="no">مرده — درس منفی</td></tr>
+  </tbody>
+</table>
+<div class="tbl-caption">داده‌های صفحات فروشگاه‌های اندرویدی (بازار، مایکت، سیبچه) و مقالات معرفی، در بازه آبان ۱۴۰۵ گردآوری شده است؛ مقادیر نصبِ اقتباس‌شده از مقالات قدیمی‌تر با علامت تقریب آمده‌اند. «همگام‌سازی» یعنی ادامه کار یک حساب واحد روی چند دستگاه.</div>
+</div>
+
+<h3 class="sub">خواندنی‌های جدول</h3>
+<p class="body-text">سه الگو از جدول بیرون می‌زند. <b>اول:</b> ستون «نسخه وب» تقریباً خالی است — فقط سه بازیگر کوچک یا میانه (محک، پول‌نگار و وب‌سرویس پارمیس) آنجا سبز هستند؛ هیچ رهبری وب را جدی نگرفته. <b>دوم:</b> هیچ محصولی هم‌زمان «ثبت خودکار + وب + همگام‌سازی کامل» را با هم ندارد؛ بهترین‌ها فقط دو سر مثلث را دارند. <b>سوم:</b> ردیف نیو یادآوری می‌کند که ستون «وضعیت فعلی» ماندگارترین ریسک بازار است — کاربری که داده‌اش را به اپ گرو می‌دهد، دفعه بعد به وعده‌های برند تازه باور نمی‌کند مگر آن‌وعده صریح درباره مالکیت داده باشد.</p>
+
+<!-- ───────── فصل ۵ ───────── -->
+<div class="chapter-header">
+  <div class="section-tag">فصل ۵</div>
+  <h2 class="section-title">شکاف‌های بازار و فرصت‌ها</h2>
+  <div class="divider"></div>
+</div>
+
+<p class="body-text">هر شکاف با شواهد از فصل‌های قبل مستند شده و بلافاصله به «فرصت مشخص» برای محصول ما ترجمه می‌شود. این هشت کارت، هسته استراتژی محصول و چک‌لیست فازهای بعدی‌اند.</p>
+
+<div class="gap-grid">
+  <div class="gap-card">
+    <div class="gap-num">۱</div>
+    <div class="t">نسخه وب و دسکتاپ تقریباً وجود ندارد</div>
+    <div class="e">در جدول فصل ۴ فقط پول‌نگار، کیف پول محک و وب‌سرویس پارمیس سبزند؛ بزرگ‌ترین بازیگر (پولکی) و همه اپ‌های ساده موبایل‌زده‌اند. کاربری که روی لپ‌تاپ می‌نشیند و ماهانه حساب می‌کند، جایی برای رفتن ندارد.</div>
+    <div class="o">وب‌اپ اول (PWA) با موبایلِ درست: یک کد، همه دستگاه‌ها، بدون دردسر فروشگاه‌های اپ — میدان بازی‌ای که رقبا ترک کرده‌اند.</div>
+  </div>
+  <div class="gap-card">
+    <div class="gap-num">۲</div>
+    <div class="t">مرگ اپ‌ها و گروگان‌گرفتن داده</div>
+    <div class="e">نیو کاملاً از دور خارج شده و کاربرانش سرِ گم کرده‌اند؛ خانه ما از فروشگاه حذف شده؛ فانوس سال‌ها بی‌بروزرسانی مانده. کاربر ایرانی یک بار سوخته و به «داده‌ات روی گوشی ما امن است» دیگر اعتماد ندارد.</div>
+    <div class="o">وعده صریح و قابل اثبات: خروجی اکسل/JSON همیشه‌رایگان + داده در حساب ابری خود کاربر + سیاست شفاف «اگر ما رفته باشیم، داده تو نرفته».</div>
+  </div>
+  <div class="gap-card">
+    <div class="gap-num">۳</div>
+    <div class="t">همگام‌سازی چنددستگاهی ضعیف یا غایب</div>
+    <div class="e">اکثر اپ‌ها آفلاینِ تک‌گوشی‌اند؛ تعویض گوشی یعنی مهاجرت دستی با پشتیبان‌های فایل. فقط پارمیس و سرویس‌های وب واقعاً حساب واحد بین دستگاه‌ها می‌دهند.</div>
+    <div class="o">حساب ابری امن به‌عنوان پیش‌فرض: ثبت از گوشی، گزارش از لپ‌تاپ، هم‌زمان، بدون فایل پشتیبان دستی.</div>
+  </div>
+  <div class="gap-card">
+    <div class="gap-num">۴</div>
+    <div class="t">هوش مصنوعی: تقریباً صفر در کل بازار فارسی</div>
+    <div class="e">هیچ اپ ایرانی بررسی‌شده‌ای ثبت زبانی، OCR رسید، دسته‌بندی یادگیرنده یا بینش متنی ندارد؛ «ثبت خودکار» همه‌جا یعنی الگویابی ساده از پیامک. استثناها خارجی و غیربومی‌اند (مثل اپ ترکیبی AI روی گوگل‌پلی).</div>
+    <div class="o">قابلیت پرچمدار ما: «بگو، خودش ثبت می‌کند» — جمله فارسی یا صوت را تراکنش دسته‌بندی‌شده می‌کند و هر ماه یک بینش خواندنی از داده می‌سازد.</div>
+  </div>
+  <div class="gap-card">
+    <div class="gap-num">۵</div>
+    <div class="t">ثبت پیامکی شکننده و حساس از نظر حریم خصوصی</div>
+    <div class="e">پیامک‌خوانی نیاز به دسترسی به کل پیامک‌ها دارد و با هر تغییر قالب پیامک بانک می‌شکند؛ نگرانی امنیتی کاربران در مقالات راهنما صریحاً آمده است. وب هم اصلاً به پیامک دسترسی ندارد.</div>
+    <div class="o">معماری کم‌دسترسی: ورود دستی فوق‌سریع + ایمپورت هوشمند فایل/پیامک انتخابی + در نسخه‌های بعد، مسیرهای غیرپیامکی (ورود صوتی، اسکن رسید).</div>
+  </div>
+  <div class="gap-card">
+    <div class="gap-num">۶</div>
+    <div class="t">چند-ارزی و واقعیت تورم نادیده مانده</div>
+    <div class="e">جز پولکی و فانوس هیچ‌کس طلا/دلار/رمزارز را در کنار تومان نگه نمی‌دارد؛ و هیچ‌کدام بودجه‌بندی را با «از دست رفتن قدرت خرید» نمی‌سنجند. پولِ خواب در ایران معنای متفاوتی دارد.</div>
+    <div class="o">پرتفوی دارایی چند-ارزی + گزارش «قدرت خرید» ماهانه: بودجه‌ای که با نرخ واقعی نفس می‌کشد، نه با عدد ثابت ابتدای سال.</div>
+  </div>
+  <div class="gap-card">
+    <div class="gap-num">۷</div>
+    <div class="t">اشتراک خانوادگی/گروهی سطح پایین</div>
+    <div class="e">هزینه‌های خانه دو نفره است اما ثبت‌کننده یکی؛ محک فقط اشتراک کیف‌پول ساده دارد و پول‌نگار بدهی طرف‌حسابی را بلند است. بودجه مشترک با نقش‌ها و گزارش هم‌زمان، در هیچ اپ فارسی کامل نیست.</div>
+    <div class="o">«فضای خانه»: اعضا با نقش (ببینند/ثبت کنند/مدیریت کنند)، هزینه مشترک، تقسیم نصفه‌نیم و گزارش خانواده.</div>
+  </div>
+  <div class="gap-card">
+    <div class="gap-num">۸</div>
+    <div class="t">مدل‌های درآمدی ناسازگار با کاربر</div>
+    <div class="e">الگوی رایج: قفل قابلیت‌های ضروری پشت پرداخت درون‌برنامه‌ای (پولکی، محک، فانوس) — یا یک قفله سنگین مثل دخلِ ~۱٫۳۶۹ میلیون تومانی. کاربر یا گروگان نسخه رایگانِ لنگ است یا سرخورده قیمت.</div>
+    <div class="o">هسته آزاد و کامل برای ثبت و گزارش پایه؛ اشتراک فقط برای لایه هوشمند پیشرفته و فضای خانوادگی — قیمت منطقی تومانی، بدون قلاب‌ها.</div>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="t">جمع‌بندی استراتژیک</div>
+  <p>شکاف‌های ۱ تا ۳ (وب + مالکیت داده + همگام‌سازی) «حق ورود به میز بازی» هستند؛ شکاف ۴ (هوش مصنوعی) «دلیل برنده شدن» است؛ شکاف‌های ۵ تا ۸ مزیت‌های تثبیت‌کننده‌اند که بعد از اولین کاربران به ترتیب آزاد می‌شوند. نقشه راه فصل ۷ دقیقاً همین ترتیب را رعایت می‌کند.</p>
+</div>
+
+<!-- ───────── فصل ۶ ───────── -->
+<div class="chapter-header">
+  <div class="section-tag">فصل ۶</div>
+  <h2 class="section-title">جهت‌گیری محصول و برند پیشنهادی</h2>
+  <div class="divider"></div>
+</div>
+
+<p class="body-text">این فصل پل بین «فهم بازار» و «فاز ۲ پروژه» است. با انتخاب خودت برای جهت‌گیری برند (AI-محور)، چشم‌انداز محصول این‌طور قالب می‌شود و پیش‌نویس جهت برند هم از همین‌جا شروع می‌شود تا در فاز ۱ و ۲ با ابزارهای هوش مصنوعی کامل شود.</p>
+
+<div class="positioning">
+  <div class="k">پوزیشنینگ پیشنهادی — یک جمله</div>
+  <div class="q">«دستیار مالی هوشمندِ تحت وب برای زندگی در ایران؛ تو فقط بگو خرجت چی بوده — بقیه‌اش با ما.»</div>
+</div>
+
+<h3 class="sub">۶.۱ — چشم‌انداز محصول در سه جمله</h3>
+<p class="body-text">محصول ما یک PFM وب‌محور است که هیچ‌وقت از کاربر نمی‌خواهد فرم پر کند: تراکنش را با جمله فارسی، صوت یا عکس رسید می‌دهد و لایه هوشمند آن را به دسته‌بندی دقیق، حساب درست و گزارش معنادار تبدیل می‌کند. داده در حساب ابری امن خودِ کاربر زندگی می‌کند و خروجی اکسل/JSON همیشه و رایگان است؛ همین دو وعده، دو تا از عمیق‌ترین زخم‌های این بازار را درمان می‌کند. نسخه رایگان هسته کامل روزمره را می‌دهد و اشتراک فقط لایه‌های هوشمند و خانوادگی را باز می‌کند.</p>
+
+<h3 class="sub">۶.۲ — شش وجه تمایز قابل دفاع</h3>
+<div class="diff-grid">
+  <div class="diff-item"><div class="t">۱. ثبت با زبان طبیعی</div><div class="d">«دیشب شام بیرون صد و بیست دادیم» → تراکنش آماده. رقبا همه فرم دارند؛ ما گفت‌وگو داریم.</div></div>
+  <div class="diff-item"><div class="t">۲. وب‌محور واقعی</div><div class="d">همه‌جا با لینک: لپ‌تاپ، گوشی، تبلت؛ بدون وابستگی به فروشگاه‌ها و بدون نصب اجباری.</div></div>
+  <div class="diff-item"><div class="t">۳. مالکیت داده به کاربر</div><div class="d">خروجی کامل اکسل/JSON با یک کلیک؛ سیاستی که بازار را نیو سوخته و ما به آن امتیاز می‌دهیم.</div></div>
+  <div class="diff-item"><div class="t">۴. بینش فارسیِ هوشمند</div><div class="d">هر ماه یک خلاصه انسانی: «سهم کافه نسبت به تیر دو برابر شد» — نه فقط نمودار خام.</div></div>
+  <div class="diff-item"><div class="t">۵. واقعیت چند-ارزی</div><div class="d">تومان، دلار، طلا و رمزارز در یک پرتفوی با گزارش قدرت خرید — پاسخ مستقیم به تورم.</div></div>
+  <div class="diff-item"><div class="t">۶. فضای خانه</div><div class="d">بودجه مشترک با نقش‌ها و تسویه خانگی؛ شکافی که هیچ اپ فارسی کاملش را ندارد.</div></div>
+</div>
+
+<h3 class="sub">۶.۳ — پیش‌نمایش برند (ورودی فاز ۲)</h3>
+<p class="body-text">لحن برند: صمیمی اما دقیق؛ مثل یک دوست حسابدار، نه یک نهاد بانکی. سه ایده نام کاندید برای بررسی در فاز ۱: «ثبتِ آرام» (نظم مالی بی‌استرس)، «مانده» (کوتاه، ماندگار، تکنیکی-دوستانه)، و «حسابه» (محاوره‌ای، یادسپاری بی‌دردسر). جهت پالت بصری از همین سند استخراج می‌شود تا برندکیت و محصول یک‌نفس باشند:</p>
+<div class="swatch-row">
+  <div class="swatch dark"><div class="h">#456454</div><div class="n">سبز جنگلی — اعتماد</div></div>
+  <div class="swatch mid"><div class="h">#298959</div><div class="n">زمردی — برند اصلی</div></div>
+  <div class="swatch light"><div class="h">#4FBB85</div><div class="n">نعنایی — نئون مثبت</div></div>
+  <div class="swatch pale"><div class="h">#E4EAE7</div><div class="n">خاکستری سبز — پس‌زمینه</div></div>
+  <div class="swatch ink"><div class="h">#232725</div><div class="n">زغال — متن</div></div>
+</div>
+<p class="small">قواعد برند در فاز ۲ با ابزارهای هوش مصنوعی (تصویرساز برای لوگو و الگوها، مدل زبانی برای صدای برند و بنرنویسی) تکمیل و در قالب یک برندکیت مستقل تحویل می‌شود.</p>
+
+<!-- ───────── فصل ۷ ───────── -->
+<div class="chapter-header">
+  <div class="section-tag">فصل ۷</div>
+  <h2 class="section-title">نقشه راه تفصیلی هشت‌فازی</h2>
+  <div class="divider"></div>
+</div>
+
+<p class="body-text">فازبندی زیر کل مسیر از «این سند» تا «انتشار عمومی» را پوشش می‌دهد؛ برآورد زمان بر مبنای کار نیمه‌وقت با کمک ابزارهای هوش مصنوعی است و می‌توان فازهای ۱ و ۲ (برند) را با فاز ۳ (معماری) موازی کرد تا مسیر فشرده‌تر شود. هر فاز، معیار موفقیت مکتوب دارد تا «تمام شد» یعنی واقعاً تمام شد.</p>
+
+<div class="table-block">
+<table>
+  <colgroup><col style="width:17%"><col style="width:11%"><col style="width:28%"><col style="width:22%"><col style="width:22%"></colgroup>
+  <thead>
+    <tr><th>فاز</th><th>بازه</th><th>دامنه کار</th><th>خروجی‌ها</th><th>معیار موفقیت</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="b">۰ — ریسرچ و استراتژی</td><td>هفته ۱ (انجام‌شده)</td><td>تحلیل رقبا، شکاف‌ها، تعریف پوزیشنینگ و جهت برند</td><td>همین سند؛ جدول مقایسه؛ چک‌لیست شکاف‌ها</td><td>تصمیم قطعی جهت‌گیری (AI-محور، وب‌اول)</td></tr>
+    <tr><td class="b">۱ — ایده‌پردازی برند</td><td>هفته ۱–۲</td><td>مودبورد، کاندیدهای نام، شعار، شخصیت برند</td><td>مودبورد تصویری؛ ۳ نام رتبه‌بندی‌شده؛ پوزیشنینگ نهایی</td><td>یک نام + یک شعار قفل شود</td></tr>
+    <tr><td class="b">۲ — ساخت برندکیت</td><td>هفته ۲–۴</td><td>لوگو با تصویرساز AI، پالت و تایپ، صدای برند با مدل زبانی، قالب‌های شبکه‌ها</td><td>برندکیت کامل (PDF + فایل‌های منبع)</td><td>هر خروجی بازاریابی قابل تولید از کیت باشد</td></tr>
+    <tr><td class="b">۳ — معماری و UX</td><td>هفته ۳–۵</td><td>جریان‌های کاربر، وایرفریم، طراحی رابط با پالت برند، دیتامدل اولیه</td><td>پروتاپ کلیک‌پذیر؛ فهرست ویژگی MVP؛ ERD پایه</td><td>یک مسیر کامل «ثبت تا گزارش» در پروتاپ باشد</td></tr>
+    <tr><td class="b">۴ — ساخت MVP وب‌اپ</td><td>هفته ۵–۱۰</td><td>احراز هویت، حساب‌ها، ثبت دستی سریع، دسته‌بندی، بودجه، گزارش‌های نموداری، خروجی اکسل</td><td>وب‌اپ قابل استفاده روزمره + دیتابیس امن</td><td>یک ماه کامل زندگی مالی خودت بدون اپ دیگر ثبت شود</td></tr>
+    <tr><td class="b">۵ — لایه هوشمند AI</td><td>هفته ۱۰–۱۳</td><td>ثبت با جمله فارسی و صوت، دسته‌بندی خودکار یادگیرنده، خلاصه ماهانه هوشمند</td><td>ماژول AI نسخه ۱ + مستندات پرامپت‌ها</td><td>حداقل ۷۰٪ تراکنش‌های روزانه با AI ثبت شود</td></tr>
+    <tr><td class="b">۶ — بتا و تثبیت</td><td>هفته ۱۳–۱۵</td><td>۲۰ تا ۵۰ کاربر واقعی، جمع‌آوری بازخورد، رفع اشکال، تنظیم قیمت‌گذاری</td><td>نسخه بتا؛ داشبورد بازخورد؛ لاگ پایداری</td><td>بازگشت هفتگی کاربران بتا بالای ۴۰٪</td></tr>
+    <tr><td class="b">۷ — انتشار و رشد</td><td>هفته ۱۵ به بعد</td><td>انتشار عمومی، محتوای معرفی، حضور در مقالات مقایسه‌ای، برنامه درآمدی</td><td>دامنه عمومی؛ صفحه فرود؛ کاتالوگ درآمد</td><td>۱ هزار ثبت‌نام در ۹۰ روز اول</td></tr>
+  </tbody>
+</table>
+<div class="tbl-caption">برآورد مبنی بر کار نیمه‌وقت + ابزارهای هوش مصنوعی؛ فازهای ۱ و ۲ برند و فاز ۳ معماری قابل اجرای موازی هستند. فاز ۰ با همین سند بسته می‌شود.</div>
+</div>
+
+<h3 class="sub">۷.۱ — نمای زمانی یک‌نگاهی</h3>
+<div class="chart">
+  <div class="chart-title">تایم‌لاین فازها (طول میله ≈ هفته‌های برآوردی)</div>
+  <div class="tl-row"><div class="tl-label">۰ — ریسرچ</div><div class="tl-track"><div class="tl-fill" style="width:3%"></div></div><div class="tl-weeks">هفته ۱</div></div>
+  <div class="tl-row"><div class="tl-label">۱ — ایده‌پردازی برند</div><div class="tl-track"><div class="tl-fill" style="width:9%"></div></div><div class="tl-weeks">هفته ۱–۲</div></div>
+  <div class="tl-row"><div class="tl-label">۲ — برندکیت</div><div class="tl-track"><div class="tl-fill" style="width:13%"></div></div><div class="tl-weeks">هفته ۲–۴</div></div>
+  <div class="tl-row"><div class="tl-label">۳ — معماری و UX</div><div class="tl-track"><div class="tl-fill" style="width:13%"></div></div><div class="tl-weeks">هفته ۳–۵</div></div>
+  <div class="tl-row"><div class="tl-label">۴ — MVP وب‌اپ</div><div class="tl-track"><div class="tl-fill" style="width:27%"></div></div><div class="tl-weeks">هفته ۵–۱۰</div></div>
+  <div class="tl-row"><div class="tl-label">۵ — لایه AI</div><div class="tl-track"><div class="tl-fill" style="width:16%"></div></div><div class="tl-weeks">هفته ۱۰–۱۳</div></div>
+  <div class="tl-row"><div class="tl-label">۶ — بتا</div><div class="tl-track"><div class="tl-fill" style="width:11%"></div></div><div class="tl-weeks">هفته ۱۳–۱۵</div></div>
+  <div class="tl-row"><div class="tl-label">۷ — انتشار و رشد</div><div class="tl-track"><div class="tl-fill" style="width:8%"></div></div><div class="tl-weeks">۱۵+</div></div>
+</div>
+
+<!-- ───────── فصل ۸ ───────── -->
+<div class="chapter-header">
+  <div class="section-tag">فصل ۸</div>
+  <h2 class="section-title">پشته فناوری، ریسک‌ها و نکات حقوقی</h2>
+  <div class="divider"></div>
+</div>
+
+<h3 class="sub">۸.۱ — پشته فناوری پیشنهادی</h3>
+<p class="body-text">انتخاب فناوری حول دو اصل است: «یک کد، همه دستگاه‌ها» (چون استراتژی ما وب‌اول است) و «سرعت رسیدن به MVP با کمک AI». پشته زیر هر دو را پوشش می‌دهد و همه اجزایش رایگان/ارزان شروع می‌شوند:</p>
+<div class="table-block">
+<table style="max-width:100%">
+  <colgroup><col style="width:22%"><col style="width:26%"><col style="width:52%"></colgroup>
+  <thead><tr><th>لایه</th><th>انتخاب</th><th>چرا</th></tr></thead>
+  <tbody>
+    <tr><td class="b">فریم‌ورک</td><td>Next.js + TypeScript</td><td>یک پروژه برای وب، PWA و API؛ اکوسیستم بزرگ و سازگاری عالی با استقرار ابری</td></tr>
+    <tr><td class="b">پایگاه داده</td><td>PostgreSQL + Prisma</td><td>مدل مالی رابطه‌ای امن؛ مهاجرت‌های نسخه‌دار؛ کوئری‌های گزارش پیچیده آسان</td></tr>
+    <tr><td class="b">احراز هویت</td><td>NextAuth (ایمیل/رمز + شماره موبایل)</td><td>حساب ابری خودِ کاربر؛ پایه وعده مالکیت داده</td></tr>
+    <tr><td class="b">لایه AI</td><td>مدل زبانی فارسی‌فهم (API)</td><td>ثبت با جمله فارسی، دسته‌بندی خودکار، خلاصه ماهانه؛ بدون مدل محلی سنگین</td></tr>
+    <tr><td class="b">نمودار</td><td>Recharts / Chart.js</td><td>گزارش‌های فارسی RTL با نمودار سبک؛ جلوگیری از بازاختراع چرخ</td></tr>
+    <tr><td class="b">استقرار</td><td>میزبانی ابری با دامنه .ir</td><td>دسترس‌پذیری پایدار داخل ایران؛ بعداً CDN داخلی برای سرعت</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3 class="sub">۸.۲ — ماتریس ریسک</h3>
+<div class="table-block">
+<table>
+  <colgroup><col style="width:24%"><col style="width:12%"><col style="width:64%"></colgroup>
+  <thead><tr><th>ریسک</th><th>شدت</th><th>راهکار</th></tr></thead>
+  <tbody>
+    <tr><td class="b">امنیتی — داده مالی شخصی</td><td class="no">بالا</td><td>رمزنگاری در حالت انتقال و سکون، رمز دوم برای ورود، لاگ دسترسی، عدم ذخیره اطلاعات کارت بانکی به‌هرشکل؛ جمع‌آوری حداقلی</td></tr>
+    <tr><td class="b">فنی — دسترسی به پیامک بانکی</td><td class="no">بالا</td><td>وب به پیامک دسترسی ندارد؛ استراتژی فصل ۵ (شکاف ۵): ثبت هوشمند دستی/صوتی/فایل؛ پیامک‌خوانی فقط در اپ همراهِ اختیاری، بعدها</td></tr>
+    <tr><td class="b">حقوقی — خدمات مالی</td><td class="mid">متوسط</td><td>PFM شخصی که پول جابه‌جا نمی‌کند و مشاوره سرمایه‌گذاری نمی‌دهد، از قلمرو مجوزهای بانکی/بورسی خارج است؛ اطمینان از قیدهای صریح در توافق‌نامه کاربری و عدم پرداخت‌پذیری اپ</td></tr>
+    <tr><td class="b">حقوقی — حریم خصوصی</td><td class="mid">متوسط</td><td>سیاست حریم خصوصی شفاف، ناشناس‌سازی داده برای آموزش مدل‌ها یا انصراف کامل، حق حذف کامل حساب</td></tr>
+    <tr><td class="b">پذیرش — عادت ثبت روزانه</td><td class="no">بالا</td><td>هزینه ثبت نزدیک صفر (یک جمله)، یادآور هوشمند بدون مزاحمت، گزارش اول در ۵ دقیقه اول استفاده</td></tr>
+    <tr><td class="b">بازاریابی — اعتماد برند نو</td><td class="mid">متوسط</td><td>رد پای عمومی (مقالات آموزش سواد مالی)، سیاست خروجی داده به‌عنوان ادعای برند، شفافیت فنی (جزئیات امنیتی منتشر شود)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p class="body-text">نکته پایانی این فصل: هیچ‌یک از این ریسک‌ها «کنسل‌کننده پروژه» نیستند؛ سه ریسک بالای جدول فقط شرط شروع را تعریف می‌کنند — امنیت به‌صورت پیش‌فرض طراحی شود، نه اینکه بعداً پلاستیک شود؛ و وعده مالکیت داده از روز اول در صفحه اصلی نوشته شود، چون فصل ۵ نشان داد این تنها چیزی است که بازارِ سوخته دیگر رایگان باور نمی‌کند.</p>
+
+<!-- ───────── منابع ───────── -->
+<div class="chapter-header">
+  <div class="section-tag">منابع</div>
+  <h2 class="section-title">فهرست منابع</h2>
+  <div class="divider"></div>
+</div>
+
+<p class="body-text">همه آمار و نقل‌قول‌های این سند از منابع زیر گردآوری شده‌اند (دسترسی: آبان ۱۴۰۵). صفحات فروشگاه‌ها اعداد پویا دارند و ممکن است بعد از تاریخ دسترسی تغییر کنند.</p>
+
+<h3 class="sub">روش‌شناسی گردآوری داده</h3>
+<p class="body-text">گردآوری داده در چهار موج جستجوی موازی انجام شد: موج اول، شناسایی فهرست اولیه اپ‌ها از مقالات معرفی و مقایسه‌ای فارسی؛ موج دوم، مراجعه به صفحه رسمی هر اپ در فروشگاه‌های اندرویدی (بازار، مایکت، سیبچه) برای استخراج اعداد نصب، امتیاز، تاریخ بروزرسانی و ویژگی‌های اعلامی سازنده؛ موج سوم، استخراج نظرات واقعی کاربران در بخش دیدگاه‌های مقالات مرجع؛ و موج چهارم، پست‌کردن هر ادعا بین حداقل دو منبع مستقل. فقط آماری که در دست‌کم دو منبع تایید شد به سند راه یافت و هر جا اختلاف بود، محافظه‌کارانه‌ترین عدد یا صفت «تقریبی» انتخاب شد.</p>
+
+<h3 class="sub">محدودیت‌های داده</h3>
+<p class="body-text">سه محدودیت را صادقانه ثبت می‌کنیم. اول، اعداد نصب و امتیاز «اسنپ‌شات» هستند و تاریخ دقیق هر نقطه داده با دیگری متفاوت است؛ به همین دلیل نمودار فصل ۲ برای مقایسه ترتیب اندازه‌هاست، نه دقیق‌بینی آماری. دوم، هیچ‌یک از رقبا گزارش رسمی مالی یا داده کاربردی منتشر نمی‌کنند، پس کیفیت تجربه کاربر صرفاً از رفتارهای قابل مشاهده (امتیاز، نظرات، تاریخ انتشار) نتیجه‌گیری شده است. سوم، وضعیت فعال بودن اپ‌ها مثل هر محصول نرم‌افزاری پویاست؛ ردیف «وضعیت فعلی» جدول فصل ۴ باید پیش از هر تصمیم استراتژیک تازه‌سازی شود.</p>
+
+<div class="sources">
+<ul style="list-style:decimal; padding-right:20px; margin:0;">
+  <li><b>صفحه رسمی پولکی در کافه بازار</b> — آمار نصب، امتیاز، ویژگی‌ها. <span class="src-url">cafebazaar.ir/app/app.poolaki</span></li>
+  <li><b>صفحه رسمی پارمیس همراه در کافه بازار</b> — امتیاز ۴.۷ و ۴۸٫۶۶۰ رأی. <span class="src-url">cafebazaar.ir/app/com.parmisit.parmismobile</span></li>
+  <li><b>صفحه رسمی فانوس در کافه بازار</b> — قابلیت‌ها و ثبت خودکار. <span class="src-url">cafebazaar.ir/app/com.fanoospfm</span></li>
+  <li><b>صفحه رسمی دخل و خرج در کافه بازار</b> — قابلیت‌ها و سیاست پرداخت مجدد. <span class="src-url">cafebazaar.ir/app/com.taxiapps.dakhlokharj</span></li>
+  <li><b>صفحه رسمی پول‌نگار در کافه بازار</b> — مدیریت مخارج خانوادگی. <span class="src-url">cafebazaar.ir/app/ir.sweetsoft.budgeting</span></li>
+  <li><b>صفحه رسمی کیف پول هوشمند (محک) در کافه بازار</b> — وب‌اپ و کیف‌های چند-ارزی. <span class="src-url">cafebazaar.ir/app/com.mahak.accounting</span></li>
+  <li><b>صفحه رسمی موج در کافه بازار و وب‌سایت موج</b> — قابلیت‌ها و فلسفه محصول. <span class="src-url">cafebazaar.ir/app/ir.esfandune.wave</span> · <span class="src-url">mowjapp.ir</span></li>
+  <li><b>صفحه رسمی دخل در کافه بازار</b> — تازه‌وارد آبان ۱۴۰۵ با قیمت ~۱٫۳۶۹ میلیون تومان. <span class="src-url">cafebazaar.ir/app/com.box.dakhl</span></li>
+  <li><b>صفحه رسمی مالیار در مایکت</b> — دفتر اقساط و چک، اسکن صیاد. <span class="src-url">myket.ir/app/app.thepixelforge.loan_tracker</span></li>
+  <li><b>دیجی‌کالا مگ — «اپلیکیشن مدیریت مالی؛ ابزارهایی هوشمند برای کنترل دخل و خرج»</b> — معرفی ایرانی/خارجی + نظرات کاربران (شامل نقل‌قول‌های پول‌نگار، فانوس، نیو). <span class="src-url">digikala.com/mag/financial-management-app</span></li>
+  <li><b>بیشتر از یک نفر — «معرفی و بررسی ۱۳ برنامه مدیریت مالی فارسی»</b> — آمار نصب اپ‌ها و نظرات کاربران. <span class="src-url">bishtarazyek.com</span></li>
+  <li><b>وای‌۲پی / وبلاگ رسمی بازار — «گزارش سال ۱۴۰۳ بازار منتشر شد: رشد فین‌تک در سایه رکود»</b> — ۵۰ میلیون کاربر فعال، رشد دسته امور مالی. <span class="src-url">way2pay.ir</span> · <span class="src-url">newsblog.cafebazaar.ir</span></li>
+  <li><b>ماهک‌والت — وب‌سایت رسمی کیف پول محک</b> · <b>پارمیس — صفحه محصول پارمیس همراه</b>. <span class="src-url">mahakwallet.ir</span> · <span class="src-url">parmisit.com</span></li>
+</ul>
+</div>
+
+</div><!-- /main-content -->
+
+<!-- ═══════════════ ENDING ═══════════════ -->
+<div class="ending">
+  <div class="line"></div>
+  <div class="big">از «پولم کجا رفت؟»<br>تا <span class="soft">«خودش می‌داند».</span></div>
+  <div class="sub">این سند فاز ۰ پروژه را می‌بندد: بازار فهمیده شد، رقبا شناسنامه‌دار شدند، شکاف‌ها مستند شدند و مسیر هشت‌فازی ترسیم است. سه گام بعدی، فوراً و بدون منتظر ماندن قابل اجرا هستند.</div>
+  <div class="next-list">
+    <div class="next-item"><div class="n">۱</div><div><div class="t">جلسه ۶۰ دقیقه‌ای تصمیم برند (همین هفته)</div><div class="d">مرور سه کاندید نام و پوزیشنینگ فصل ۶؛ قفل کردن نام و شعار — ورودی رسمی فاز ۱.</div></div></div>
+    <div class="next-item"><div class="n">۲</div><div><div class="t">راه‌اندازی اتاق کار پروژه</div><div class="d">یک فضای مشترک برای سند برندکیت، لیست ویژگی‌های MVP و بورد فازها؛ هر خروجی فاز یک پوشه.</div></div></div>
+    <div class="next-item"><div class="n">۳</div><div><div class="t">چاشنی فنی: پروژه Next.js خالی + پوشه طراحی</div><div class="d">اسکلت وب‌اپ و دامنه کاندید را همین هفته ثبت کن تا فاز ۴ با کمترین اصطکاک شروع شود.</div></div></div>
+  </div>
+  <div class="recap">
+    <div class="recap-item"><div class="rt">فاز ۱–۲</div><div class="rd">هویت برند و برندکیت کامل با ابزارهای هوش مصنوعی</div></div>
+    <div class="recap-item"><div class="rt">فاز ۳–۴</div><div class="rd">معماری، UX و ساخت MVP وب‌اپ قابل استفاده روزمره</div></div>
+    <div class="recap-item"><div class="rt">فاز ۵–۷</div><div class="rd">لایه AI، بتای واقعی و انتشار عمومی با برنامه رشد</div></div>
+  </div>
+  <div class="footer-line"><span>گزارش تحقیق بازار حسابداری شخصی ایران — ویرایش ۱.۰</span><span>آبان ۱۴۰۵</span></div>
+</div>
+
+</body>
+</html>
