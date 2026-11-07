@@ -1,0 +1,230 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ─── فونت Vazirmatn ─── */
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-display: swap;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-mifa);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* رنگ‌های برند MIFA به‌عنوان توکن مستقیم */
+  --color-mifa-teal: #08D9D6;
+  --color-mifa-teal-soft: #C7F7F5;
+  --color-mifa-teal-ink: #073F40;
+  --color-mifa-navy: #252A34;
+  --color-mifa-rose: #FF2E63;
+  --color-mifa-gray: #EAEAEA;
+  --color-mifa-success: #238B68;
+  --color-mifa-warning: #B97820;
+}
+
+/* ─── پالت برند MIFA (لایت) ─── */
+:root {
+  --radius: 1rem;
+  --font-mifa: "Vazirmatn", "Peyda", "IRANSansX", sans-serif;
+
+  --background: #E9EBEB;
+  --foreground: #252A34;
+  --card: #F6F7F7;
+  --card-foreground: #252A34;
+  --popover: #FFFFFF;
+  --popover-foreground: #252A34;
+  --primary: #08D9D6;
+  --primary-foreground: #073F40;
+  --secondary: #DDE0E5;
+  --secondary-foreground: #252A34;
+  --muted: #E2E5E6;
+  --muted-foreground: #68717D;
+  --accent: #C7F7F5;
+  --accent-foreground: #073F40;
+  --destructive: #FF2E63;
+  --border: #D1D5D8;
+  --input: #D1D5D8;
+  --ring: #08D9D6;
+  --chart-1: #08D9D6;
+  --chart-2: #347F89;
+  --chart-3: #D3A45B;
+  --chart-4: #70A58F;
+  --chart-5: #7896B0;
+  --sidebar: #F6F7F7;
+  --sidebar-foreground: #252A34;
+  --sidebar-primary: #08D9D6;
+  --sidebar-primary-foreground: #073F40;
+  --sidebar-accent: #C7F7F5;
+  --sidebar-accent-foreground: #073F40;
+  --sidebar-border: #D1D5D8;
+  --sidebar-ring: #08D9D6;
+}
+
+/* ─── پالت برند MIFA (دارک — سرمه‌ای برند) ─── */
+.dark {
+  --background: #252A34;
+  --foreground: #EAEAEA;
+  --card: #2D333F;
+  --card-foreground: #EAEAEA;
+  --popover: #343B48;
+  --popover-foreground: #EAEAEA;
+  --primary: #08D9D6;
+  --primary-foreground: #073F40;
+  --secondary: #343B48;
+  --secondary-foreground: #EAEAEA;
+  --muted: #343B48;
+  --muted-foreground: #BEC3CB;
+  --accent: #074E4D;
+  --accent-foreground: #C7F7F5;
+  --destructive: #FF5B83;
+  --border: #48515E;
+  --input: #48515E;
+  --ring: #08D9D6;
+  --chart-1: #08D9D6;
+  --chart-2: #5CE7E3;
+  --chart-3: #E2AD5D;
+  --chart-4: #55C49A;
+  --chart-5: #7896B0;
+  --sidebar: #2D333F;
+  --sidebar-foreground: #EAEAEA;
+  --sidebar-primary: #08D9D6;
+  --sidebar-primary-foreground: #073F40;
+  --sidebar-accent: #074E4D;
+  --sidebar-accent-foreground: #C7F7F5;
+  --sidebar-border: #48515E;
+  --sidebar-ring: #08D9D6;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    font-family: var(--font-mifa);
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01";
+  }
+  /* اعداد در ستون‌های مالی همیشه با عرض ثابت */
+  .numeric {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+}
+
+/* مقیاس تایپ برند MIFA */
+.mifa-h3 {
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 700;
+}
+.mifa-h4 {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.mifa-body {
+  font-size: 15px;
+  line-height: 26px;
+  font-weight: 400;
+}
+.mifa-body-sm {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+}
+.mifa-caption {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+}
+
+/* اسکرول‌بار ظریف برای لیست‌های بلند */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted-foreground) 30%, transparent);
+  border-radius: 8px;
+}
+
+/* انیمیشن ورود کارت‌ها */
+@keyframes mifa-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.mifa-fade-up {
+  animation: mifa-fade-up 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}

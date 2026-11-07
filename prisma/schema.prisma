@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// تراکنش مالی — مبلغ به تومان (عدد صحیح)
+model Transaction {
+  id        String   @id @default(cuid())
+  type      String   // "expense" | "income"
+  amount    Int      // تومان
+  title     String?  // یادداشت اختیاری
+  category  String   // شناسه دسته: groceries, transport, ...
+  date      DateTime // تاریخ تراکنش
+  source    String   @default("manual") // "manual" | "sms"
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@index([category])
+}
+
+// بودجه ماهانه کل — کلید ماه جلالی مثل "1404-09"
+model Budget {
+  id        String @id @default(cuid())
+  month     String @unique // "1404-09"
+  amount    Int    // تومان
+}
+
+// بودجه هر دسته در یک ماه
+model CategoryBudget {
+  id       String @id @default(cuid())
+  month    String
+  category String
+  amount   Int    // تومان
+
+  @@unique([month, category])
+}

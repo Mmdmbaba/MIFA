@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="84" viewBox="0 0 300 84" role="img" aria-labelledby="title desc">
+  <title id="title">نشان فارسی میفا</title><desc id="desc">نشان هندسی میفا در کنار نام فارسی میفا.</desc>
+  <g transform="translate(16 16)" fill="none" stroke="#08D9D6" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 35V14.5C10 11.8 12.9 10.5 15 12.2L24 20L33 12.2C35.1 10.5 38 11.8 38 14.5V35"/><path d="M24 20V33"/><circle cx="24" cy="39" r="2.7" fill="#08D9D6" stroke="none"/>
+  </g>
+  <text x="284" y="59" text-anchor="end" direction="rtl" unicode-bidi="plaintext" font-family="Vazirmatn, Peyda, IRANSansX, Noto Sans Arabic, sans-serif" font-size="47" font-weight="750" fill="#252A34">میفا</text>
+</svg>
