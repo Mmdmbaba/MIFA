@@ -3,6 +3,54 @@
 // هوک‌های داده MIFA بر پایه TanStack Query
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { CategoryId } from "@/lib/mifa/categories"
+import type { PlanProfile, FixedItem } from "@/lib/mifa/plan"
+
+export interface ProfileData {
+  profile: (PlanProfile & { onboardedAt: string }) | null
+  fixed: FixedItem[]
+}
+
+export function useProfile() {
+  return useQuery<ProfileData>({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const res = await fetch("/api/profile")
+      if (!res.ok) throw new Error("خطا در دریافت پروفایل")
+      return res.json()
+    },
+  })
+}
+
+export function useSaveProfile() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: PlanProfile & { fixed: { label: string; amount: number; icon: string }[] }) => {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? "خطا در ذخیره پروفایل")
+      }
+      return res.json()
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
+  })
+}
+
+export function useResetProfile() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/profile", { method: "DELETE" })
+      if (!res.ok) throw new Error("خطا در بازنشانی پروفایل")
+      return res.json()
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
+  })
+}
 
 export interface Transaction {
   id: string

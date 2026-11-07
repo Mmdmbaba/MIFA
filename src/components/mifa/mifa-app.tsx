@@ -1,135 +1,167 @@
 "use client"
 
-// پوسته اصلی MIFA — ناوبری، هدر، انتخاب ماه و دیالوگ ثبت
+// پوسته اصلی MIFA v2 — گیت onboarding، هدر، داک شناور و ناوبری
 import { useState } from "react"
-import { MifaLogo, MifaSymbol } from "./mifa-logo"
+import { RibbonMark, MifaWordmark } from "./mifa-logo"
+import { OnboardingWizard } from "./onboarding"
 import { DashboardView } from "./dashboard-view"
 import { TransactionsView } from "./transactions-view"
-import { BudgetView } from "./budget-view"
+import { PlanView } from "./plan-view"
 import { InsightsView } from "./insights-view"
 import { SettingsView } from "./settings-view"
 import { QuickAddDialog } from "./quick-add-dialog"
 import { currentMonthKey, monthLabel, shiftMonth, todayJalali } from "@/lib/mifa/jalali"
-import { toPersianDigits } from "@/lib/mifa/format"
+import { useProfile } from "./mifa-hooks"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
-import { Plus, LayoutDashboard, ListOrdered, PiggyBank, TrendingUp, Settings, Sun, Moon, ChevronRight, ChevronLeft } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Plus, LayoutDashboard, ListOrdered, MapPinned, TrendingUp, Settings, Sun, Moon, ChevronRight, ChevronLeft } from "lucide-react"
 
-type Tab = "dashboard" | "transactions" | "budget" | "insights" | "settings"
+type Tab = "dashboard" | "transactions" | "plan" | "insights" | "settings"
 
 const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", label: "خانه", icon: LayoutDashboard },
   { id: "transactions", label: "تراکنش‌ها", icon: ListOrdered },
-  { id: "budget", label: "بودجه", icon: PiggyBank },
+  { id: "plan", label: "برنامه", icon: MapPinned },
   { id: "insights", label: "تحلیل", icon: TrendingUp },
-  { id: "settings", label: "تنظیمات", icon: Settings },
 ]
 
 export function MifaApp() {
+  const profile = useProfile()
   const [tab, setTab] = useState<Tab>("dashboard")
   const [month, setMonth] = useState(currentMonthKey())
   const [addOpen, setAddOpen] = useState(false)
   const { setTheme, resolvedTheme } = useTheme()
   const today = todayJalali()
 
+  // ── لودینگ اولیه ──
+  if (profile.isLoading) {
+    return (
+      <div className="mifa-bg">
+        <div className="relative z-10 max-w-lg mx-auto px-5 pt-10 space-y-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-11 w-40 rounded-2xl" />
+            <Skeleton className="h-11 w-11 rounded-2xl" />
+          </div>
+          <Skeleton className="h-52 rounded-3xl" />
+          <div className="grid grid-cols-2 gap-4"><Skeleton className="h-24 rounded-2xl" /><Skeleton className="h-24 rounded-2xl" /></div>
+          <Skeleton className="h-64 rounded-3xl" />
+        </div>
+      </div>
+    )
+  }
+
+  // ── onboarding اولین ورود ──
+  if (!profile.data?.profile) {
+    return (
+      <div className="mifa-bg">
+        <div className="relative z-10 min-h-screen flex flex-col justify-center max-w-lg mx-auto px-5 py-10">
+          <OnboardingWizard />
+        </div>
+      </div>
+    )
+  }
+
   const isCurrent = month === today.key
   const canGoNext = month < today.key
-
   const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark")
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="mifa-bg">
       {/* ── هدر ── */}
-      <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md border-b border-border">
-        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-          <MifaLogo compact={false} className="sm:flex" />
-          <MifaLogo compact={true} className="sm:hidden" />
+      <header className="sticky top-0 z-40 bg-background/70 backdrop-blur-xl border-b border-border">
+        <div className="max-w-lg mx-auto px-5 h-[68px] flex items-center justify-between gap-3">
+          <button onClick={() => setTab("dashboard")} className="flex items-center gap-2.5 min-w-0" aria-label="خانه MIFA">
+            <RibbonMark size={38} />
+            <MifaWordmark tagline={false} />
+          </button>
 
           {/* انتخاب ماه */}
-          {tab !== "settings" ? (
-            <div className="flex items-center gap-1.5">
-              <Button variant="ghost" size="icon" className="h-9 w-9" disabled={!canGoNext}
+          {tab !== "settings" && (
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" disabled={!canGoNext}
                 onClick={() => setMonth(shiftMonth(month, 1))} aria-label="ماه بعد">
                 <ChevronRight className="w-5 h-5" />
               </Button>
               <button
                 onClick={() => setMonth(today.key)}
-                className={`min-w-28 text-center rounded-xl px-3 py-1.5 font-bold text-body-sm transition-colors ${
+                className={`min-w-24 text-center rounded-xl px-2.5 py-1.5 text-body-sm font-bold transition-colors ${
                   isCurrent ? "text-primary" : "text-foreground hover:bg-muted"
                 }`}
                 title="برگشت به ماه جاری">
                 {monthLabel(month)}
               </button>
-              <Button variant="ghost" size="icon" className="h-9 w-9"
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl"
                 onClick={() => setMonth(shiftMonth(month, -1))} aria-label="ماه قبل">
                 <ChevronLeft className="w-5 h-5" />
               </Button>
             </div>
-          ) : <div />}
+          )}
 
-          <Button variant="ghost" size="icon" className="h-9 w-9"
-            onClick={toggleTheme}
-            aria-label="تغییر تم">
-            {/* آیکون‌ها با CSS کنترل می‌شن تا hydration mismatch نداشته باشیم */}
-            <Sun className="w-5 h-5 hidden dark:block" />
-            <Moon className="w-5 h-5 dark:hidden" />
+          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"
+            onClick={() => setTab("settings")} aria-label="تنظیمات">
+            <Settings className="w-5 h-5" />
           </Button>
         </div>
-
-        {/* تب‌های دسکتاپ */}
-        <nav className="hidden md:flex max-w-3xl mx-auto px-4 pb-3 gap-1.5" aria-label="بخش‌های اپ">
-          {TABS.map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              aria-current={tab === t.id ? "page" : undefined}
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-body-sm font-semibold transition-colors ${
-                tab === t.id
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}>
-              <t.icon className="w-4 h-4" />
-              {t.label}
-            </button>
-          ))}
-        </nav>
       </header>
 
       {/* ── محتوا ── */}
-      <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-5 pb-28 md:pb-8">
-        {tab === "dashboard" && <DashboardView month={month} onSeeAll={() => setTab("transactions")} />}
+      <main className="relative z-10 w-full max-w-lg mx-auto px-5 py-5 pb-36">
+        {tab === "dashboard" && <DashboardView month={month} onSeeAll={() => setTab("transactions")} onGoPlan={() => setTab("plan")} />}
         {tab === "transactions" && <TransactionsView month={month} />}
-        {tab === "budget" && <BudgetView month={month} />}
+        {tab === "plan" && <PlanView month={month} />}
         {tab === "insights" && <InsightsView month={month} />}
-        {tab === "settings" && <SettingsView />}
+        {tab === "settings" && <SettingsView onGoBack={() => setTab("dashboard")} />}
       </main>
 
       {/* ── دیالوگ ثبت ── */}
       <QuickAddDialog open={addOpen} onOpenChange={setAddOpen} month={month} />
 
-      {/* ── ناوبری موبایل ── */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/92 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)]"
-        aria-label="ناوبری موبایل">
-        <div className="grid grid-cols-5 h-16">
-          {TABS.map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              aria-current={tab === t.id ? "page" : undefined}
-              className={`flex flex-col items-center justify-center gap-1 ${
-                tab === t.id ? "text-primary" : "text-muted-foreground"
-              }`}>
-              <t.icon className="w-5 h-5" />
-              <span className="text-[10px] font-semibold">{t.label}</span>
+      {/* ── داک شناور پایین ── */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 pb-[calc(env(safe-area-inset-bottom)+14px)] pt-2 pointer-events-none"
+        aria-label="ناوبری اصلی">
+        <div className="max-w-lg mx-auto px-5 flex items-center justify-center">
+          <div className="dock pointer-events-auto rounded-[26px] px-2 py-1.5 flex items-center gap-1 relative">
+            {TABS.slice(0, 2).map((t) => (
+              <DockItem key={t.id} t={t} active={tab === t.id} onClick={() => setTab(t.id)} />
+            ))}
+
+            {/* دکمه ثبت مرکزی */}
+            <button
+              onClick={() => setAddOpen(true)}
+              className="mx-1.5 h-14 w-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-[0_8px_28px_-4px_rgba(8,217,214,0.6)] hover:bg-primary/95 active:scale-95 transition-transform shrink-0"
+              aria-label="ثبت خرج جدید">
+              <Plus className="w-7 h-7" strokeWidth={2.6} />
             </button>
-          ))}
+
+            {TABS.slice(2).map((t) => (
+              <DockItem key={t.id} t={t} active={tab === t.id} onClick={() => setTab(t.id)} />
+            ))}
+          </div>
         </div>
       </nav>
 
-      {/* ── دکمه شناور ثبت ── */}
+      {/* دکمه تم شناور بالا-چپ برای دسترسی سریع */}
       <button
-        onClick={() => setAddOpen(true)}
-        className="fixed z-50 bottom-20 md:bottom-8 start-4 md:start-8 h-14 px-5 rounded-2xl bg-primary text-primary-foreground font-bold shadow-lg flex items-center gap-2 hover:bg-primary/90 active:scale-[0.97] transition-transform"
-        aria-label="ثبت خرج جدید">
-        <Plus className="w-6 h-6" strokeWidth={2.5} />
-        <span className="text-body-sm">ثبت سریع</span>
+        onClick={toggleTheme}
+        className="fixed z-40 bottom-8 start-5 h-11 w-11 rounded-2xl glass flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+        aria-label="تغییر تم">
+        <Sun className="w-5 h-5 hidden dark:block" />
+        <Moon className="w-5 h-5 dark:hidden" />
       </button>
     </div>
+  )
+}
+
+function DockItem({ t, active, onClick }: { t: { id: Tab; label: string; icon: typeof LayoutDashboard }; active: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={`flex flex-col items-center justify-center gap-0.5 h-14 w-[68px] rounded-2xl transition-colors ${
+        active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+      }`}>
+      <t.icon className="w-5 h-5" strokeWidth={active ? 2.4 : 2} />
+      <span className={`text-[10px] ${active ? "font-bold" : "font-medium"}`}>{t.label}</span>
+    </button>
   )
 }

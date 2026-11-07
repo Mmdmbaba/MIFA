@@ -34,6 +34,12 @@
   font-weight: 800;
   font-display: swap;
 }
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn-Black.ttf") format("truetype");
+  font-weight: 900;
+  font-display: swap;
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -68,93 +74,109 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 6px);
 
-  /* رنگ‌های برند MIFA به‌عنوان توکن مستقیم */
+  /* رنگ‌های برند MIFA */
   --color-mifa-teal: #08D9D6;
   --color-mifa-teal-soft: #C7F7F5;
   --color-mifa-teal-ink: #073F40;
   --color-mifa-navy: #252A34;
   --color-mifa-rose: #FF2E63;
   --color-mifa-gray: #EAEAEA;
-  --color-mifa-success: #238B68;
-  --color-mifa-warning: #B97820;
+  --color-mifa-success: #2BD38B;
+  --color-mifa-warning: #E2AD5D;
 }
 
-/* ─── پالت برند MIFA (لایت) ─── */
+/* ══════════════════════════════════════════════
+   MIFA v2 — «شب برند» (پیش‌فرض تیره، عمیق و درخشان)
+   ══════════════════════════════════════════════ */
 :root {
-  --radius: 1rem;
+  --radius: 1.25rem;
   --font-mifa: "Vazirmatn", "Peyda", "IRANSansX", sans-serif;
 
-  --background: #E9EBEB;
+  /* لایت */
+  --background: #ECEDEF;
   --foreground: #252A34;
-  --card: #F6F7F7;
+  --card: #FFFFFF;
   --card-foreground: #252A34;
   --popover: #FFFFFF;
   --popover-foreground: #252A34;
   --primary: #08D9D6;
-  --primary-foreground: #073F40;
-  --secondary: #DDE0E5;
+  --primary-foreground: #063B3D;
+  --secondary: #E4E7EA;
   --secondary-foreground: #252A34;
-  --muted: #E2E5E6;
-  --muted-foreground: #68717D;
-  --accent: #C7F7F5;
+  --muted: #E7E9EC;
+  --muted-foreground: #6B7480;
+  --accent: #DFF9F8;
   --accent-foreground: #073F40;
   --destructive: #FF2E63;
-  --border: #D1D5D8;
-  --input: #D1D5D8;
+  --border: #DFE3E6;
+  --input: #D8DDE0;
   --ring: #08D9D6;
   --chart-1: #08D9D6;
-  --chart-2: #347F89;
+  --chart-2: #34808B;
   --chart-3: #D3A45B;
   --chart-4: #70A58F;
   --chart-5: #7896B0;
-  --sidebar: #F6F7F7;
+  --sidebar: #FFFFFF;
   --sidebar-foreground: #252A34;
   --sidebar-primary: #08D9D6;
-  --sidebar-primary-foreground: #073F40;
-  --sidebar-accent: #C7F7F5;
+  --sidebar-primary-foreground: #063B3D;
+  --sidebar-accent: #DFF9F8;
   --sidebar-accent-foreground: #073F40;
-  --sidebar-border: #D1D5D8;
+  --sidebar-border: #DFE3E6;
   --sidebar-ring: #08D9D6;
+
+  --hero-from: #252A34;
+  --hero-to: #1D2430;
+  --glow-teal: rgba(8, 217, 214, 0.14);
+  --glow-rose: rgba(255, 46, 99, 0.10);
+  --dock-bg: rgba(255, 255, 255, 0.92);
+  --dock-border: rgba(37, 42, 52, 0.08);
 }
 
-/* ─── پالت برند MIFA (دارک — سرمه‌ای برند) ─── */
 .dark {
-  --background: #252A34;
+  --background: #141821;
   --foreground: #EAEAEA;
-  --card: #2D333F;
+  --card: #1C222D;
   --card-foreground: #EAEAEA;
-  --popover: #343B48;
+  --popover: #232A36;
   --popover-foreground: #EAEAEA;
   --primary: #08D9D6;
-  --primary-foreground: #073F40;
-  --secondary: #343B48;
+  --primary-foreground: #063B3D;
+  --secondary: #232A36;
   --secondary-foreground: #EAEAEA;
-  --muted: #343B48;
-  --muted-foreground: #BEC3CB;
-  --accent: #074E4D;
+  --muted: #232A36;
+  --muted-foreground: #8B94A3;
+  --accent: #0B4A4B;
   --accent-foreground: #C7F7F5;
   --destructive: #FF5B83;
-  --border: #48515E;
-  --input: #48515E;
+  --border: rgba(255, 255, 255, 0.07);
+  --input: rgba(255, 255, 255, 0.12);
   --ring: #08D9D6;
   --chart-1: #08D9D6;
   --chart-2: #5CE7E3;
   --chart-3: #E2AD5D;
   --chart-4: #55C49A;
-  --chart-5: #7896B0;
-  --sidebar: #2D333F;
+  --chart-5: #7E9BC4;
+  --sidebar: #1C222D;
   --sidebar-foreground: #EAEAEA;
   --sidebar-primary: #08D9D6;
-  --sidebar-primary-foreground: #073F40;
-  --sidebar-accent: #074E4D;
+  --sidebar-primary-foreground: #063B3D;
+  --sidebar-accent: #0B4A4B;
   --sidebar-accent-foreground: #C7F7F5;
-  --sidebar-border: #48515E;
+  --sidebar-border: rgba(255, 255, 255, 0.07);
   --sidebar-ring: #08D9D6;
+
+  --hero-from: #202633;
+  --hero-to: #161B26;
+  --glow-teal: rgba(8, 217, 214, 0.16);
+  --glow-rose: rgba(255, 46, 99, 0.12);
+  --dock-bg: rgba(28, 34, 45, 0.88);
+  --dock-border: rgba(255, 255, 255, 0.08);
 }
 
 @layer base {
@@ -168,22 +190,102 @@
     @apply bg-background text-foreground;
     font-feature-settings: "ss01";
   }
-  /* اعداد در ستون‌های مالی همیشه با عرض ثابت */
   .numeric {
     font-variant-numeric: tabular-nums lining-nums;
   }
 }
 
-/* مقیاس تایپ برند MIFA */
+/* ── پس‌زمینه زنده: هاله‌های نرم برند ── */
+.mifa-bg {
+  position: relative;
+  min-height: 100vh;
+}
+.mifa-bg::before,
+.mifa-bg::after {
+  content: "";
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(110px);
+  pointer-events: none;
+  z-index: 0;
+}
+.mifa-bg::before {
+  width: 46vw; height: 46vw;
+  top: -18vw; inset-inline-start: -12vw;
+  background: var(--glow-teal);
+}
+.mifa-bg::after {
+  width: 40vw; height: 40vw;
+  bottom: -16vw; inset-inline-end: -10vw;
+  background: var(--glow-rose);
+}
+
+/* ── کارت شیشه‌ای ── */
+.glass {
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(10, 14, 20, 0.06), 0 8px 28px -12px rgba(10, 14, 20, 0.14);
+}
+.dark .glass {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 10px 34px -14px rgba(0, 0, 0, 0.5);
+}
+
+/* ── کارت هیرو گرادیانی ── */
+.hero-card {
+  background: linear-gradient(150deg, var(--hero-from) 0%, var(--hero-to) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+.hero-card::before {
+  content: "";
+  position: absolute;
+  width: 220px; height: 220px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(8, 217, 214, 0.22) 0%, transparent 70%);
+  top: -80px; inset-inline-end: -60px;
+  pointer-events: none;
+}
+.hero-card::after {
+  content: "";
+  position: absolute;
+  width: 180px; height: 180px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 46, 99, 0.16) 0%, transparent 70%);
+  bottom: -70px; inset-inline-start: -40px;
+  pointer-events: none;
+}
+
+/* ── داک پایین شناور ── */
+.dock {
+  background: var(--dock-bg);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--dock-border);
+  box-shadow: 0 12px 40px -10px rgba(8, 14, 22, 0.35);
+}
+
+/* ── تایپوگرافی ── */
+.mifa-display {
+  font-size: 44px;
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.mifa-h2 {
+  font-size: 26px;
+  line-height: 36px;
+  font-weight: 800;
+}
 .mifa-h3 {
-  font-size: 22px;
+  font-size: 21px;
   line-height: 30px;
   font-weight: 700;
 }
 .mifa-h4 {
-  font-size: 18px;
-  line-height: 28px;
-  font-weight: 600;
+  font-size: 17px;
+  line-height: 26px;
+  font-weight: 700;
 }
 .mifa-body {
   font-size: 15px;
@@ -201,7 +303,15 @@
   font-weight: 500;
 }
 
-/* اسکرول‌بار ظریف برای لیست‌های بلند */
+/* ── درخشش عدد هیرو ── */
+.text-glow {
+  text-shadow: 0 0 32px rgba(8, 217, 214, 0.45);
+}
+.text-glow-rose {
+  text-shadow: 0 0 32px rgba(255, 46, 99, 0.4);
+}
+
+/* ── اسکرول‌بار ظریف ── */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -214,17 +324,36 @@
   border-radius: 8px;
 }
 
-/* انیمیشن ورود کارت‌ها */
+/* ── انیمیشن‌ها ── */
 @keyframes mifa-fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .mifa-fade-up {
-  animation: mifa-fade-up 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: mifa-fade-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.mifa-stagger > * {
+  animation: mifa-fade-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.mifa-stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.mifa-stagger > *:nth-child(2) { animation-delay: 0.07s; }
+.mifa-stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.mifa-stagger > *:nth-child(4) { animation-delay: 0.17s; }
+.mifa-stagger > *:nth-child(5) { animation-delay: 0.22s; }
+.mifa-stagger > *:nth-child(6) { animation-delay: 0.27s; }
+
+@keyframes mifa-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+.mifa-pulse {
+  animation: mifa-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes mifa-slide-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.mifa-slide-in {
+  animation: mifa-slide-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }

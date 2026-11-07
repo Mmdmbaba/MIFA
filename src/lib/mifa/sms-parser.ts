@@ -102,15 +102,21 @@ function detectDate(line: string, fallback: Date): Date {
 function extractTitle(line: string, type: "expense" | "income"): string | null {
   // تلاش برای گرفتن نام فروشگاه/شرح بعد از «از» یا «بابت»
   const latin = toLatinDigits(line)
-  const fromMatch = latin.match(/(?:از|بابت|در)\s+([^،,؛;\d\u066C]{3,40})/)
+  // بخش موجودی/رمز و اینا اطلاعاتی نیست — قبل از هر چیز دورش می‌ریزیم
+  const core = latin.split(/موجودی|رمز|شبا|خطای|شماره پیگیری/)[0]
+  const fromMatch = core.match(/(?:از|بابت)\s+([^،,؛;:\d\u066C\-—]{3,40})/)
   if (fromMatch) {
-    const t = fromMatch[1].trim()
+    const t = fromMatch[1].replace(/[\s\-—:]+$/g, "").trim()
     // کلمات عمومی مثل «کارت» عنوان خوبی نیستند
     if (t && !["کارت", "حساب", "شما"].includes(t) && !SKIP_BEFORE.some((k) => t.includes(k))) {
       return t
     }
   }
-  const cleaned = latin.replace(/[0-9\u066C,،:/.\-]/g, " ").replace(/\s+/g, " ").trim()
+  const cleaned = core
+    .replace(/مبلغ|ریال|تومان|خرید|برداشت|خرج کارت|واریز|پرداخت/g, " ")
+    .replace(/[0-9\u066C,،:/.\-—]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
   if (cleaned.length >= 3) return cleaned.slice(0, 60)
   return type === "expense" ? "خرج" : "درآمد"
 }

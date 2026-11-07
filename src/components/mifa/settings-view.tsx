@@ -12,18 +12,20 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useTheme } from "next-themes"
-import { MifaSymbol } from "./mifa-logo"
-import { useImportData, useClearAll } from "./mifa-hooks"
-import { Download, Upload, Sun, Moon, Info, ShieldCheck } from "lucide-react"
+import { RibbonMark } from "./mifa-logo"
+import { useImportData, useClearAll, useResetProfile } from "./mifa-hooks"
+import { Download, Upload, Sun, Moon, Info, ShieldCheck, RotateCcw } from "lucide-react"
 
-export function SettingsView() {
+export function SettingsView({ onGoBack }: { onGoBack?: () => void }) {
   const { theme, setTheme } = useTheme()
   const { toast } = useToast()
   const importData = useImportData()
   const clearAll = useClearAll()
+  const resetProfile = useResetProfile()
   const fileRef = useRef<HTMLInputElement>(null)
   const [confirmClear, setConfirmClear] = useState(false)
   const [confirmImport, setConfirmImport] = useState<Record<string, unknown> | null>(null)
+  const [confirmReset, setConfirmReset] = useState(false)
 
   const exportJson = async () => {
     try {
@@ -69,6 +71,20 @@ export function SettingsView() {
 
   return (
     <div className="space-y-4 mifa-fade-up">
+      {/* برنامه */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="mifa-h4">برنامه ماهانه</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" onClick={() => setConfirmReset(true)}
+            className="w-full h-11 justify-start gap-2.5">
+            <RotateCcw className="w-4 h-4 text-primary" />
+            اجرای مجدد سوالات شروع
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* ظاهر */}
       <Card>
         <CardHeader className="pb-2">
@@ -122,18 +138,45 @@ export function SettingsView() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="mifa-h4 inline-flex items-center gap-2">
-            <Info className="w-5 h-5 text-[#08D9D6]" /> درباره MIFA
+            <Info className="w-5 h-5 text-primary" /> درباره MIFA
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center gap-4">
-          <MifaSymbol className="w-14 h-14 shrink-0" />
+          <RibbonMark size={56} className="shrink-0" />
           <div>
             <p className="font-extrabold tracking-[0.15em] text-lg">MIFA</p>
             <p className="text-body-sm text-muted-foreground mt-1">پولت رو بشناس، بیشتر نگه دار.</p>
-            <p className="text-caption text-muted-foreground mt-1.5">نسخه ۱.۰ · ساخته‌شده برای مدیریت مالی شخصی</p>
+            <p className="text-caption text-muted-foreground mt-1.5">نسخه ۲.۰ · ساخته‌شده برای مدیریت مالی شخصی</p>
           </div>
         </CardContent>
       </Card>
+
+      {/* تایید اجرای مجدد onboarding */}
+      <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>برنامه از نو تنظیم بشه؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              درآمد، خرج‌های ثابت و هدف پس‌اندازت دوباره ازت پرسیده می‌شه. تراکنش‌های ثبت‌شده حذف نمی‌شن.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel>بی‌خیال</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              resetProfile.mutate(undefined, {
+                onSuccess: () => {
+                  toast({ title: "برنامه پاک شد — دوباره شروع می‌کنیم" })
+                  onGoBack?.()
+                },
+                onError: (e) => toast({ title: e.message, variant: "destructive" }),
+                onSettled: () => setConfirmReset(false),
+              })
+            }} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              بله، از نو
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* تایید پاک‌سازی */}
       <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>

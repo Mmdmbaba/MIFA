@@ -144,7 +144,7 @@ export function TransactionsView({ month }: TransactionsViewProps) {
                           ) : null}
                         </p>
                       </div>
-                      <span className={`numeric font-bold text-body-sm ${t.type === "income" ? "text-[#238B68]" : ""}`}>
+                      <span className={`numeric font-bold text-body-sm ${t.type === "income" ? "text-[#2BD38B]" : ""}`}>
                         {t.type === "income" ? "+" : "−"}{formatAmount(t.amount)}
                       </span>
                       <div className="flex gap-1">

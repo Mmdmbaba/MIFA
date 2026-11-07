@@ -129,7 +129,7 @@ export function QuickAddDialog({ open, onOpenChange }: QuickAddDialogProps) {
               </Button>
               <Button variant={type === "income" ? "default" : "outline"}
                 onClick={() => setType("income")}
-                className={type === "income" ? "bg-[#238B68] text-white font-bold hover:bg-[#238B68]/90" : ""}>
+                className={type === "income" ? "bg-[#2BD38B] text-white font-bold hover:bg-[#2BD38B]/90" : ""}>
                 درآمد
               </Button>
             </div>
@@ -227,7 +227,7 @@ export function QuickAddDialog({ open, onOpenChange }: QuickAddDialogProps) {
                 <div className="space-y-2 max-h-72 overflow-y-auto pl-1">
                   {parsed.map((p, i) => (
                     <div key={i}
-                      className={`rounded-xl border p-3 flex items-start gap-3 ${
+                      className={`rounded-xl border p-3 flex items-start gap-3 min-w-0 ${
                         selected.has(i) ? "border-primary/50 bg-accent/40" : "border-border opacity-60"
                       }`}>
                       <Checkbox
@@ -242,7 +242,7 @@ export function QuickAddDialog({ open, onOpenChange }: QuickAddDialogProps) {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <span className={`font-bold numeric text-body ${p.type === "income" ? "text-[#238B68]" : "text-foreground"}`}>
+                          <span className={`font-bold numeric text-body ${p.type === "income" ? "text-[#2BD38B]" : "text-foreground"}`}>
                             {p.type === "income" ? "+" : "−"}{formatAmount(p.amount)} تومان
                           </span>
                           <span className="text-[10px] text-muted-foreground shrink-0">
@@ -250,12 +250,12 @@ export function QuickAddDialog({ open, onOpenChange }: QuickAddDialogProps) {
                           </span>
                         </div>
                         {p.title ? (
-                          <p className="text-caption text-muted-foreground truncate mt-0.5" title={p.raw}>{p.title}</p>
+                          <p className="text-caption text-muted-foreground mt-0.5 leading-5" title={p.raw}>{p.title}</p>
                         ) : null}
                         <select
                           value={p.category}
                           onChange={(e) => changeParsedCategory(i, e.target.value)}
-                          className="mt-1.5 text-[11px] bg-transparent border border-border rounded-md px-1.5 py-0.5 text-muted-foreground"
+                          className="mt-1.5 w-full max-w-44 text-[11px] bg-transparent border border-border rounded-md px-1.5 py-0.5 text-muted-foreground truncate"
                           aria-label="دسته تراکنش"
                         >
                           {CATEGORIES.map((c) => (

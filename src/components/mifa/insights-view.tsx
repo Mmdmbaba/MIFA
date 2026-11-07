@@ -1,16 +1,23 @@
 "use client"
 
-// تحلیل MIFA — نشت پول، پیش‌بینی آخر ماه و آمار
+// تحلیل MIFA v2 — نشت پول، پیش‌بینی آخر ماه بر پایه برنامه و آمار
 import { useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CategoryBadge } from "./mifa-icons"
-import { useTransactions, useBudget, type Transaction } from "./mifa-hooks"
-import { computeMonthStats, computeBudgetInsight, computeLeaks } from "./mifa-logic"
+import { DonutChart } from "./mifa-charts"
+import { useTransactions, useProfile, type Transaction } from "./mifa-hooks"
+import { computeMonthStats, computeLeaks } from "./mifa-logic"
+import { computePlanStatus, type PlanStatusKind } from "@/lib/mifa/plan"
 import { formatAmount, formatPercent, formatCompact, toPersianDigits } from "@/lib/mifa/format"
 import { monthLabel, shiftMonth } from "@/lib/mifa/jalali"
 import { getCategory } from "@/lib/mifa/categories"
 import { ArrowDownRight, ArrowUpRight, Target, TrendingUp, PiggyBank } from "lucide-react"
+
+const STATUS_COLOR: Record<PlanStatusKind, string> = {
+  safe: "#08D9D6",
+  watch: "#E2AD5D",
+  danger: "#FF2E63",
+}
 
 interface InsightsViewProps {
   month: string
@@ -19,17 +26,24 @@ interface InsightsViewProps {
 export function InsightsView({ month }: InsightsViewProps) {
   const tx = useTransactions(month)
   const prevTx = useTransactions(shiftMonth(month, -1))
-  const budget = useBudget(month)
+  const profile = useProfile()
 
   const stats = useMemo(() => computeMonthStats(tx.data ?? [], month), [tx.data, month])
   const prevStats = useMemo(
     () => computeMonthStats(prevTx.data ?? [], shiftMonth(month, -1)),
     [prevTx.data, month]
   )
-  const insight = useMemo(() => {
-    if (!budget.data?.monthly) return null
-    return computeBudgetInsight(budget.data.monthly, stats, month, true)
-  }, [budget.data, stats, month])
+
+  const status = useMemo(() => {
+    const p = profile.data?.profile
+    if (!p) return null
+    return computePlanStatus(
+      { name: p.name, income: p.income, payday: p.payday, savingsMode: p.savingsMode as never, savingsAmount: p.savingsAmount, savingsPercent: p.savingsPercent },
+      profile.data?.fixed ?? [],
+      month,
+      { totalExpense: stats.totalExpense, totalIncome: stats.totalIncome, dayOfMonth: stats.dayOfMonth }
+    )
+  }, [profile.data, stats, month])
 
   const leaks = useMemo(
     () => computeLeaks(stats.byCategory, stats.totalExpense, prevStats.byCategory),
@@ -44,8 +58,8 @@ export function InsightsView({ month }: InsightsViewProps) {
     return best
   }, [tx.data])
 
-  if (tx.isLoading || prevTx.isLoading) {
-    return <div className="space-y-4"><Skeleton className="h-56 rounded-2xl" /><Skeleton className="h-56 rounded-2xl" /></div>
+  if (tx.isLoading || prevTx.isLoading || profile.isLoading) {
+    return <div className="space-y-4"><Skeleton className="h-56 rounded-3xl" /><Skeleton className="h-56 rounded-3xl" /></div>
   }
 
   const dailyAvg = stats.dayOfMonth > 0 && stats.dayOfMonth <= 40
@@ -53,21 +67,21 @@ export function InsightsView({ month }: InsightsViewProps) {
     : 0
 
   return (
-    <div className="space-y-4 mifa-fade-up">
+    <div className="space-y-5 mifa-stagger">
+      <div className="pt-1">
+        <h1 className="mifa-h2">تحلیل {monthLabel(month)}</h1>
+        <p className="text-body-sm text-muted-foreground mt-1">همین‌جاست که می‌تونی جلوی نشت پول رو بگیری</p>
+      </div>
+
       {/* نشت پول */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="mifa-h4">نشت پول — سه دسته‌ای که بیشتر می‌خورن</CardTitle>
-          <p className="text-caption text-muted-foreground">
-            مقایسه با {monthLabel(shiftMonth(month, -1))} — همین‌جاست که می‌تونی جلوی خروج پول رو بگیری
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <section className="glass rounded-3xl p-5" aria-label="نشت پول">
+        <h2 className="mifa-h4">نشت پول — سه دسته‌ای که بیشتر می‌خورن</h2>
+        <div className="mt-4 space-y-3">
           {leaks.length === 0 ? (
             <p className="text-body-sm text-muted-foreground py-4 text-center">این ماه هنوز خرجی ثبت نشده</p>
           ) : (
             leaks.map((leak, idx) => (
-              <div key={leak.category} className="flex items-center gap-3 rounded-xl border border-border p-3.5">
+              <div key={leak.category} className="flex items-center gap-3 rounded-2xl border border-border p-3.5">
                 <span className="numeric text-lg font-extrabold text-muted-foreground w-6 text-center">
                   {toPersianDigits(idx + 1)}
                 </span>
@@ -83,7 +97,7 @@ export function InsightsView({ month }: InsightsViewProps) {
                     </span>
                     {leak.deltaPct !== null ? (
                       <span className={`text-caption font-semibold inline-flex items-center gap-1 ${
-                        leak.deltaPct > 5 ? "text-destructive" : leak.deltaPct < -5 ? "text-[#238B68]" : "text-muted-foreground"
+                        leak.deltaPct > 5 ? "text-[#FF5B83]" : leak.deltaPct < -5 ? "text-[#2BD38B]" : "text-muted-foreground"
                       }`}>
                         {leak.deltaPct > 5 ? <ArrowUpRight className="w-3.5 h-3.5" /> :
                          leak.deltaPct < -5 ? <ArrowDownRight className="w-3.5 h-3.5" /> : null}
@@ -97,50 +111,43 @@ export function InsightsView({ month }: InsightsViewProps) {
               </div>
             ))
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      {/* پیش‌بینی */}
-      {insight ? (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="mifa-h4 inline-flex items-center gap-2">
-              <Target className="w-5 h-5 text-[#08D9D6]" /> پیش‌بینی آخر ماه
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-3 gap-3 text-center">
-            <div className="rounded-xl bg-muted/60 px-2 py-3.5">
+      {/* پیش‌بینی بر پایه برنامه */}
+      {status && (
+        <section className="glass rounded-3xl p-5" aria-label="پیش‌بینی آخر ماه">
+          <h2 className="mifa-h4 inline-flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" /> پیش‌بینی آخر ماه
+          </h2>
+          <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+            <div className="rounded-2xl bg-muted/50 px-2 py-3.5">
               <p className="text-caption text-muted-foreground">با این روال خرج می‌شه</p>
-              <p className="numeric font-extrabold mt-1.5 text-body-lg">{formatCompact(insight.projectedTotal)}</p>
+              <p className="numeric font-extrabold mt-1.5 text-body">{formatCompact(Math.max(0, status.plan.flexible - status.projectedFlexibleLeft))}</p>
             </div>
-            <div className="rounded-xl bg-muted/60 px-2 py-3.5">
+            <div className="rounded-2xl px-2 py-3.5" style={{ backgroundColor: `${STATUS_COLOR[status.status]}18` }}>
               <p className="text-caption text-muted-foreground">برات می‌مونه</p>
-              <p className={`numeric font-extrabold mt-1.5 text-body-lg ${insight.projectedDiff >= 0 ? "text-[#238B68]" : "text-destructive"}`}>
-                {formatCompact(Math.abs(insight.projectedDiff))}
+              <p className="numeric font-extrabold mt-1.5 text-body" style={{ color: STATUS_COLOR[status.status] }}>
+                {formatCompact(Math.max(0, status.kept))}
               </p>
             </div>
-            <div className="rounded-xl bg-muted/60 px-2 py-3.5">
+            <div className="rounded-2xl bg-muted/50 px-2 py-3.5">
               <p className="text-caption text-muted-foreground">سقف روزانه</p>
-              <p className="numeric font-extrabold mt-1.5 text-body-lg text-[#08D9D6]">{formatCompact(insight.dailyAllowance)}</p>
+              <p className="numeric font-extrabold mt-1.5 text-body text-primary">{formatCompact(status.dailyAllowance)}</p>
             </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="py-6 text-center text-body-sm text-muted-foreground">
-            برای پیش‌بینی دقیق، اول از تب «بودجه» بودجه این ماه رو بذار
-          </CardContent>
-        </Card>
+          </div>
+          <p className="text-caption text-muted-foreground mt-3.5 leading-5">
+            پیش‌بینی با فرض تکرار سرعت خرج فعلی تا آخر ماه محاسبه می‌شه و شامل پس‌انداز برنامه‌ات هم هست.
+          </p>
+        </section>
       )}
 
       {/* آمار ماه */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="mifa-h4 inline-flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-[#08D9D6]" /> آمار {monthLabel(month)}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-3">
+      <section className="glass rounded-3xl p-5" aria-label="آمار ماه">
+        <h2 className="mifa-h4 inline-flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-primary" /> آمار ماه
+        </h2>
+        <div className="mt-4 grid grid-cols-2 gap-3">
           <StatBox label="میانگین خرج روزانه" value={dailyAvg > 0 ? `${formatAmount(dailyAvg)} تومان` : "—"} />
           <StatBox label="خرج ۷ روز اخیر" value={stats.spentLast7 > 0 ? `${formatAmount(stats.spentLast7)} تومان` : "—"} />
           <StatBox
@@ -149,33 +156,39 @@ export function InsightsView({ month }: InsightsViewProps) {
             hint={biggest?.title ?? undefined}
           />
           <StatBox
-            label="درآمد ثبت‌شده"
+            label="درآمد ثبت‌شده (اضافه بر حقوق)"
             value={stats.totalIncome > 0 ? `${formatAmount(stats.totalIncome)} تومان` : "—"}
             hint={stats.totalIncome > 0 && stats.totalExpense > 0
               ? `${formatPercent((stats.totalExpense / stats.totalIncome) * 100)} خرج شده`
               : undefined}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      {/* پس‌انداز */}
-      {stats.totalIncome > 0 ? (
-        <div className="rounded-2xl border border-[#08D9D6]/40 bg-[#08D9D6]/[0.07] px-4 py-3.5 flex items-start gap-3">
-          <PiggyBank className="w-5 h-5 text-[#08D9D6] shrink-0 mt-0.5" />
+      {/* دونات دسته‌ها */}
+      <section className="glass rounded-3xl p-5" aria-label="تفکیک دسته‌ها">
+        <h2 className="mifa-h4 mb-4">پول کجا می‌ره؟</h2>
+        <DonutChart slices={stats.byCategory} />
+      </section>
+
+      {/* پس‌انداز انگیزشی */}
+      {status && status.plan.savings > 0 && (
+        <div className="rounded-2xl border border-[#2BD38B]/40 bg-[#2BD38B]/[0.07] px-4 py-3.5 flex items-start gap-3">
+          <PiggyBank className="w-5 h-5 text-[#2BD38B] shrink-0 mt-0.5" />
           <p className="text-body-sm leading-6">
-            از درآمد این ماه <span className="numeric font-bold text-[#08D9D6]">
-            {formatAmount(Math.max(0, stats.totalIncome - stats.totalExpense))}</span> تومان باقی مونده —
-            اگه همین رو پس‌انداز کنی، سالی می‌شه {formatCompact(Math.max(0, (stats.totalIncome - stats.totalExpense)) * 12)} تومان.
+            با پس‌انداز {formatCompact(status.plan.savings)} تومانی‌ات، سالی می‌شه{" "}
+            <span className="numeric font-bold text-[#2BD38B]">{formatCompact(status.plan.savings * 12)}</span> تومان —
+            یعنی {toPersianDigits(12)} ماه پشت سر هم اگه به همین روال ادامه بدی.
           </p>
         </div>
-      ) : null}
+      )}
     </div>
   )
 }
 
 function StatBox({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-xl bg-muted/60 px-3.5 py-3">
+    <div className="rounded-2xl bg-muted/50 px-3.5 py-3">
       <p className="text-caption text-muted-foreground">{label}</p>
       <p className="numeric font-bold mt-1">{value}</p>
       {hint ? <p className="text-[11px] text-muted-foreground mt-0.5 truncate" title={hint}>{hint}</p> : null}

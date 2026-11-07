@@ -1,29 +1,65 @@
 "use client"
 
-// لوگوی MIFA — علامت قیفی M + وردمارک، از برند کیت (وکتور خطی)
-export function MifaSymbol({ className }: { className?: string }) {
+// لوگوی MIFA — ریبون دستی خودِ کاربر در همه‌جای اپ
+// نسخه شفاف برای تم روشن، نسخه نقره‌ای برای تم تیره (کلاس dark:)
+export function RibbonMark({ className = "", size = 40 }: { className?: string; size?: number }) {
   return (
-    <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
-      <g stroke="#08D9D6" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 35V14.5C10 11.8 12.9 10.5 15 12.2L24 20L33 12.2C35.1 10.5 38 11.8 38 14.5V35" />
-        <path d="M24 20V33" />
-      </g>
-      <circle cx="24" cy="39" r="2.7" fill="#08D9D6" />
-    </svg>
+    <span className={`relative inline-block shrink-0 ${className}`} style={{ width: size, height: size }}>
+      <img
+        src="/brand/ribbon.png"
+        alt="لوگوی MIFA"
+        width={size}
+        height={size}
+        className="absolute inset-0 w-full h-full object-contain dark:hidden"
+        draggable={false}
+      />
+      <img
+        src="/brand/ribbon-dark.png"
+        alt=""
+        aria-hidden="true"
+        width={size}
+        height={size}
+        className="absolute inset-0 w-full h-full object-contain hidden dark:block"
+        draggable={false}
+      />
+    </span>
   )
 }
 
-export function MifaLogo({ compact = false, className = "" }: { compact?: boolean; className?: string }) {
-  if (compact) {
-    return <MifaSymbol className={`w-8 h-8 ${className}`} />
-  }
+export function RibbonTile({ className = "", size = 56 }: { className?: string; size?: number }) {
   return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <MifaSymbol className="w-9 h-9" />
-      <div className="flex flex-col leading-none">
-        <span className="text-xl font-extrabold tracking-[0.18em] text-foreground">MIFA</span>
-        <span className="text-[10px] font-medium text-muted-foreground mt-1">مدیریت مالی شخصی</span>
-      </div>
+    <img
+      src="/brand/ribbon-tile.png"
+      alt="لوگوی MIFA"
+      width={size}
+      height={size}
+      className={`shrink-0 object-contain ${className}`}
+      draggable={false}
+    />
+  )
+}
+
+export function MifaWordmark({ tagline = true, tone = "brand" }: { tagline?: boolean; tone?: "brand" | "onDark" }) {
+  return (
+    <div className="flex flex-col leading-none">
+      <span className={`text-[22px] font-black tracking-[0.22em] ${tone === "onDark" ? "text-white" : "text-foreground"}`}>
+        MIFA
+      </span>
+      {tagline ? (
+        <span className={`text-[10px] font-semibold mt-1.5 ${tone === "onDark" ? "text-white/60" : "text-muted-foreground"}`}>
+          پولت رو بشناس، بیشتر نگه دار
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+export function MifaLogo({ compact = false, tone = "brand" }: { compact?: boolean; tone?: "brand" | "onDark" }) {
+  if (compact) return <RibbonMark size={34} />
+  return (
+    <div className="flex items-center gap-2.5">
+      <RibbonMark size={44} />
+      <MifaWordmark tone={tone} />
     </div>
   )
 }
