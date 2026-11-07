@@ -1,0 +1,178 @@
+/* MIFA Design Tokens — v1.0
+   Load Vazirmatn + Manrope separately. All layout examples assume RTL by default.
+*/
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  /* Fixed brand core */
+  --mifa-teal: #08D9D6;
+  --mifa-navy: #252A34;
+  --mifa-rose: #FF2E63;
+  --mifa-gray: #EAEAEA;
+
+  /* Complete brand ramps: tints/shades for borders, surfaces and states */
+  --teal-50: #E5FCFB; --teal-100: #C7F7F5; --teal-200: #91EFEC; --teal-300: #5DE6E2; --teal-400: #2FE0DC;
+  --teal-500: #08D9D6; --teal-600: #06B9B6; --teal-700: #058E8C; --teal-800: #066B69; --teal-900: #074E4D;
+  --navy-50: #F1F2F4; --navy-100: #DDE0E5; --navy-200: #BEC3CB; --navy-300: #949CA8; --navy-400: #687281;
+  --navy-500: #48515E; --navy-600: #343B48; --navy-700: #252A34; --navy-800: #1C2028; --navy-900: #14171D;
+  --rose-50: #FFF0F4; --rose-100: #FFD5E0; --rose-200: #FFADC2; --rose-300: #FF7D9F; --rose-400: #FF527F;
+  --rose-500: #FF2E63; --rose-600: #D92352; --rose-700: #AB1C41; --rose-800: #7E1632; --rose-900: #551023;
+  --gray-50: #FAFAFA; --gray-100: #F5F5F5; --gray-200: #EAEAEA; --gray-300: #D7D7D7; --gray-400: #BDBDBD;
+  --gray-500: #9C9C9C; --gray-600: #797979; --gray-700: #5A5A5A; --gray-800: #3B3B3B; --gray-900: #252A34;
+
+  /* Light surfaces */
+  --bg: #EAEAEA;
+  --surface: #EAEAEA;
+  --surface-raised: #F5F6F6;
+  --surface-overlay: #FFFFFF;
+  --surface-muted: #DDE1E2;
+  --text: #252A34;
+  --text-muted: #68717D;
+  --text-subtle: #89919B;
+  --border: #D1D5D8;
+  --border-strong: #AEB7BC;
+  --brand: #08D9D6;
+  --brand-hover: #06B9B6;
+  --brand-pressed: #058E8C;
+  --brand-soft: #C7F7F5;
+  --brand-ink: #073F40;
+  --accent: #FF2E63;
+  --accent-soft: #FFD5E0;
+  --on-brand: #252A34;
+  --on-accent: #FFFFFF;
+  --success: #238B68;
+  --success-soft: #DDF4EA;
+  --warning: #B97820;
+  --warning-soft: #FFF0D6;
+  --error: #FF2E63;
+  --error-soft: #FFE0E8;
+  --info: #087F86;
+  --focus-ring: #08D9D6;
+  --scrim: rgb(37 42 52 / 42%);
+
+  /* Category chart palette — rose is reserved for alerts, not routine categories */
+  --chart-01: #08D9D6; /* groceries */
+  --chart-02: #347F89; /* transport */
+  --chart-03: #6F8790; /* home */
+  --chart-04: #A5B5B4; /* bills */
+  --chart-05: #D3A45B; /* entertainment */
+  --chart-06: #70A58F; /* health */
+  --chart-07: #8C7565; /* clothing */
+  --chart-08: #7896B0; /* education */
+  --chart-09: #C18B97; /* gifts */
+  --chart-10: #78B9A7; /* savings */
+
+  /* Typography */
+  --font-fa: "Vazirmatn", "Peyda", "IRANSansX", "Noto Sans Arabic", sans-serif;
+  --font-latin: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-ui: var(--font-fa);
+  --font-numeric: "Manrope", "Vazirmatn", sans-serif;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+
+  /* 4px spacing scale */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Radius scale */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --shadow-1: 0 1px 2px rgb(37 42 52 / 5%);
+  --shadow-2: 0 4px 14px rgb(37 42 52 / 7%);
+  --shadow-3: 0 12px 32px rgb(37 42 52 / 12%);
+  --shadow-focus: 0 0 0 3px rgb(8 217 214 / 28%);
+
+  /* Data-viz */
+  --chart-grid: #D1D5D8;
+  --chart-axis: #68717D;
+  --chart-tooltip-bg: #252A34;
+  --chart-tooltip-text: #EAEAEA;
+  --chart-stroke: 2px;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(.2, .8, .2, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 320ms;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #252A34;
+  --surface: #2D333F;
+  --surface-raised: #343B48;
+  --surface-overlay: #3B4351;
+  --surface-muted: #1C2028;
+  --text: #EAEAEA;
+  --text-muted: #BEC3CB;
+  --text-subtle: #949CA8;
+  --border: #48515E;
+  --border-strong: #687281;
+  --brand: #08D9D6;
+  --brand-hover: #2FE0DC;
+  --brand-pressed: #06B9B6;
+  --brand-soft: #074E4D;
+  --brand-ink: #C7F7F5;
+  --accent: #FF2E63;
+  --accent-soft: #551023;
+  --on-brand: #252A34;
+  --on-accent: #FFFFFF;
+  --success: #55C49A;
+  --success-soft: #173F35;
+  --warning: #E2AD5D;
+  --warning-soft: #49371E;
+  --error: #FF5B83;
+  --error-soft: #551023;
+  --info: #5CE7E3;
+  --focus-ring: #08D9D6;
+  --scrim: rgb(0 0 0 / 58%);
+  --chart-grid: #48515E;
+  --chart-axis: #BEC3CB;
+  --chart-tooltip-bg: #EAEAEA;
+  --chart-tooltip-text: #252A34;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 18%);
+  --shadow-2: 0 4px 14px rgb(0 0 0 / 22%);
+  --shadow-3: 0 12px 32px rgb(0 0 0 / 30%);
+}
+
+/* Use teal as the 10% active accent. Rose replaces part of that accent budget only for alerts. */
+html { font-family: var(--font-ui); color: var(--text); background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text); direction: rtl; }
+button, input, select, textarea { font: inherit; }
+.numeric, [data-numeric="true"] { font-family: var(--font-numeric); font-variant-numeric: tabular-nums lining-nums; }
+
+/* Type scale (px / line-height px); sizes apply to Persian and Latin equivalents. */
+.mifa-h1 { font-size: 36px; line-height: 44px; font-weight: 800; letter-spacing: -0.025em; }
+.mifa-h2 { font-size: 28px; line-height: 36px; font-weight: 700; letter-spacing: -0.02em; }
+.mifa-h3 { font-size: 22px; line-height: 30px; font-weight: 700; }
+.mifa-h4 { font-size: 18px; line-height: 28px; font-weight: 600; }
+.mifa-body-lg { font-size: 17px; line-height: 28px; font-weight: 400; }
+.mifa-body { font-size: 15px; line-height: 26px; font-weight: 400; }
+.mifa-body-sm { font-size: 14px; line-height: 22px; font-weight: 400; }
+.mifa-caption { font-size: 12px; line-height: 18px; font-weight: 500; }
+.mifa-display-number { font-family: var(--font-numeric); font-size: 40px; line-height: 48px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.035em; }
+
+.mifa-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-1); }
+.mifa-focusable:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.mifa-pattern { background-image: url("../assets/mifa-pattern.svg"); background-repeat: repeat; }

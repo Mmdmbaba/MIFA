@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="72" viewBox="0 0 288 72" role="img" aria-labelledby="title desc">
+  <title id="title">MIFA logo</title><desc id="desc">A geometric M-shaped flow mark with a small retained-value dot, beside the MIFA wordmark.</desc>
+  <g transform="translate(8 8)" fill="none" stroke="#08D9D6" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 35V14.5C10 11.8 12.9 10.5 15 12.2L24 20L33 12.2C35.1 10.5 38 11.8 38 14.5V35"/><path d="M24 20V33"/><circle cx="24" cy="39" r="2.7" fill="#08D9D6" stroke="none"/></g>
+  <g transform="translate(78 11)" fill="none" stroke="#252A34" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"><path d="M0 43V5L20 24L40 5V43"/><path d="M57 5V43"/><path d="M76 43V5H111M76 24H103"/><path d="M126 43L145 5L164 43M133 29H157"/></g>
+</svg>
