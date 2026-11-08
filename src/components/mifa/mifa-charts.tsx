@@ -65,19 +65,19 @@ export function DonutChart({ slices, size = 180 }: { slices: Slice[]; size?: num
       </text>
       <text x={size / 2} y={size / 2 + 16} textAnchor="middle" className="fill-muted-foreground"
         style={{ fontSize: 11 }} direction="rtl">
-        تومان خرج ماه
+        تومان خرج دوره
       </text>
     </svg>
   )
 }
 
 export interface DayBar {
-  day: number // روز جلالی ماه
+  day: number // شماره روز دوره
   amount: number
 }
 
-/** نمودار میله‌ای خرج روزانه در ماه جلالی */
-export function DailyBars({ bars, height = 120 }: { bars: DayBar[]; height?: number }) {
+/** نمودار میله‌ای خرج روزانه در دوره مالی */
+export function DailyBars({ bars, height = 120, todayIndex = -1 }: { bars: DayBar[]; height?: number; todayIndex?: number }) {
   if (bars.length === 0) return null
   const max = Math.max(...bars.map((b) => b.amount), 1)
   const w = 100 // درصدی کار می‌کنیم
@@ -85,12 +85,12 @@ export function DailyBars({ bars, height = 120 }: { bars: DayBar[]; height?: num
 
   return (
     <svg viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" className="w-full" style={{ height }} role="img"
-      aria-label="خرج روزهای ماه">
+      aria-label="خرج روزهای دوره">
       {bars.map((b, i) => {
         const barW = (w - gap * (bars.length - 1)) / bars.length
         const x = i * (barW + gap)
         const h = Math.max((b.amount / max) * (height - 8), b.amount > 0 ? 3 : 2)
-        const isToday = i === bars.length - 1
+        const isToday = i === todayIndex
         return (
           <rect
             key={b.day}

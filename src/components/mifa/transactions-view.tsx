@@ -1,6 +1,6 @@
 "use client"
 
-// لیست تراکنش‌ها — فیلتر، جستجو، ویرایش و حذف
+// لیست تراکنش‌ها — تقویم خرج، فیلتر روز، جستجو، ویرایش و حذف
 import { useMemo, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,14 +15,21 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { CategoryBadge } from "./mifa-icons"
+import { MifaCalendar, type DayMarker } from "./mifa-calendar"
 import { useTransactions, useDeleteTransaction, useUpdateTransaction, type Transaction } from "./mifa-hooks"
 import { CATEGORIES } from "@/lib/mifa/categories"
 import { formatAmount, parseAmountInput, toPersianDigits } from "@/lib/mifa/format"
-import { fullJalaliDate } from "@/lib/mifa/jalali"
-import { Search, Pencil, Trash2 } from "lucide-react"
+import { fullJalaliDate, todayJalali } from "@/lib/mifa/jalali"
+import {
+  cycleLabel, cycleDayOf, daysInCycle, parseCycleKey,
+  cycleStartDate, cycleEndDate, currentCycleKey,
+} from "@/lib/mifa/cycle"
+import { JALALI_MONTHS } from "@/lib/mifa/jalali"
+import { Search, Pencil, Trash2, X, CalendarDays } from "lucide-react"
 
 interface TransactionsViewProps {
-  month: string
+  cycle: string
+  startDay: number
 }
 
 interface EditState {
@@ -32,27 +39,95 @@ interface EditState {
   category: string
 }
 
-export function TransactionsView({ month }: TransactionsViewProps) {
-  const tx = useTransactions(month)
+export function TransactionsView({ cycle, startDay }: TransactionsViewProps) {
+  const tx = useTransactions(cycle, startDay)
   const del = useDeleteTransaction()
   const update = useUpdateTransaction()
   const { toast } = useToast()
 
   const [query, setQuery] = useState("")
   const [catFilter, setCatFilter] = useState<string>("all")
+  const [dayFilter, setDayFilter] = useState<number | null>(null)
+  const [calMonth, setCalMonth] = useState<string>(() => {
+    const { jy, jm } = parseCycleKey(cycle)
+    return `${jy}-${String(jm).padStart(2, "0")}`
+  })
   const [edit, setEdit] = useState<EditState | null>(null)
   const [deleting, setDeleting] = useState<Transaction | null>(null)
+
+  const today = todayJalali()
+  const isCurrentCycle = cycle === currentCycleKey(startDay)
+  const totalDays = daysInCycle(cycle, startDay)
+
+  // گرماشم خرج هر روز برای ماه نمایشی تقویم
+  const markers = useMemo(() => {
+    const marks: Record<number, DayMarker> = {}
+    const calStart = cycleStartDate(cycle)
+    const calEnd = cycleEndDate(cycle, startDay)
+    // بازه ماه نمایشی برای کم‌رنگ کردن روزهای خارج دوره
+    const [vy, vm] = calMonth.split("-").map(Number)
+    void vy; void vm
+    for (const t of tx.data ?? []) {
+      if (t.type !== "expense") continue
+      const d = new Date(t.date)
+      const { jy, jm, jd } = { jy: 0, jm: 0, jd: 0 }
+      void jy; void jm; void jd
+      // روز جلالی از خود تاریخ
+      const j = toJalaliDay(d)
+      if (j.monthKey !== calMonth) continue
+      const inCycle = d >= calStart && d < calEnd
+      const m = marks[j.day] ?? {}
+      m.heat = Math.min(1, (m.heat ?? 0))
+      marks[j.day] = m
+    }
+    // محاسبه شدت نسبی
+    const perDay = new Map<number, number>()
+    for (const t of tx.data ?? []) {
+      if (t.type !== "expense") continue
+      const d = new Date(t.date)
+      const j = toJalaliDay(d)
+      if (j.monthKey !== calMonth) continue
+      perDay.set(j.day, (perDay.get(j.day) ?? 0) + t.amount)
+    }
+    const maxAmt = Math.max(0, ...perDay.values())
+    for (const [day, amt] of perDay) {
+      marks[day] = { ...marks[day], heat: maxAmt > 0 ? amt / maxAmt : 0 }
+    }
+    // روزهای خارج دوره کم‌رنگ
+    const { jy: cy, jm: cm, jd: cjd } = parseCycleKey(cycle)
+    void cy; void cm
+    for (let day = 1; day <= 31; day++) {
+      const m = marks[day]
+      if (!m) continue
+      const dateOf = jalaliToDate(calMonth, day)
+      const inCycle = dateOf >= calStart && dateOf < calEnd
+      if (!inCycle) marks[day] = { ...m, dim: true }
+    }
+    // نشانگر شروع دوره
+    marks[cjd] = { ...(marks[cjd] ?? {}), dot: true }
+    return marks
+  }, [tx.data, calMonth, cycle, startDay])
 
   const filtered = useMemo(() => {
     let rows = tx.data ?? []
     if (catFilter !== "all") rows = rows.filter((t) => t.category === catFilter)
+    if (dayFilter !== null) {
+      rows = rows.filter((t) => cycleDayOf(new Date(t.date), cycle) === dayFilter)
+    }
     if (query.trim()) {
       const q = query.trim().toLowerCase()
       rows = rows.filter((t) =>
         (t.title ?? "").toLowerCase().includes(q) || String(t.amount).includes(q))
     }
     return rows
-  }, [tx.data, catFilter, query])
+  }, [tx.data, catFilter, query, dayFilter, cycle])
+
+  const dayFilterTotal = useMemo(() => {
+    if (dayFilter === null) return 0
+    return (tx.data ?? [])
+      .filter((t) => t.type === "expense" && cycleDayOf(new Date(t.date), cycle) === dayFilter)
+      .reduce((s, t) => s + t.amount, 0)
+  }, [tx.data, dayFilter, cycle])
 
   const grouped = useMemo(() => {
     const map = new Map<string, Transaction[]>()
@@ -100,6 +175,48 @@ export function TransactionsView({ month }: TransactionsViewProps) {
 
   return (
     <div className="space-y-4 mifa-fade-up">
+      {/* ── تقویم خرج ── */}
+      <section className="glass rounded-3xl p-4" aria-label="تقویم خرج">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="mifa-h4 inline-flex items-center gap-2">
+            <CalendarDays className="w-4.5 h-4.5 text-primary" />
+            تقویم خرج
+          </h2>
+          <span className="text-caption text-muted-foreground numeric">
+            {cycleLabel(cycle, startDay)}
+          </span>
+        </div>
+        <MifaCalendar
+          monthKey={calMonth}
+          onShiftMonth={(d) => setCalMonth(shiftMonthKey(calMonth, d))}
+          selectedDay={dayFilter}
+          onSelectDay={(day) => {
+            const m = markers[day]
+            if (m?.dim) return
+            setDayFilter((prev) => (prev === day ? null : day))
+          }}
+          markers={markers}
+        />
+        <p className="text-caption text-muted-foreground mt-2 text-center">
+          روزها پررنگ‌تر یعنی خرج بیشتر — روی هر روز بزن تا تراکنش‌هاش جدا بشه
+          {startDay > 1 ? " · نقطه رنگی روز شروع دوره‌ست" : ""}
+        </p>
+      </section>
+
+      {/* چیپ فیلتر روز */}
+      {dayFilter !== null && (
+        <div className="flex items-center justify-between rounded-2xl border border-primary/40 bg-primary/[0.08] px-4 py-2.5">
+          <p className="text-body-sm font-semibold numeric">
+            فقط روز {toPersianDigits(dayFilter)}
+            {dayFilterTotal > 0 ? ` — خرج: ${formatAmount(dayFilterTotal)} تومان` : " — بدون خرج"}
+          </p>
+          <button onClick={() => setDayFilter(null)}
+            className="text-caption text-primary font-bold inline-flex items-center gap-1 hover:underline">
+            <X className="w-3.5 h-3.5" /> برداشتن فیلتر
+          </button>
+        </div>
+      )}
+
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -122,7 +239,9 @@ export function TransactionsView({ month }: TransactionsViewProps) {
       {grouped.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-body-sm text-muted-foreground">
-            {query || catFilter !== "all" ? "چیزی مطابق فیلتر پیدا نشد" : `در ${monthLabelShort(month)} تراکنشی ثبت نشده`}
+            {query || catFilter !== "all" || dayFilter !== null
+              ? "چیزی مطابق فیلتر پیدا نشد"
+              : `در ${cycleLabel(cycle, startDay)} تراکنشی ثبت نشده`}
           </CardContent>
         </Card>
       ) : (
@@ -218,7 +337,7 @@ export function TransactionsView({ month }: TransactionsViewProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel>انصراف</AlertDialogCancel>
+            <AlertDialogCancel>بی‌خیال</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-white hover:bg-destructive/90">
               حذف
             </AlertDialogAction>
@@ -233,8 +352,26 @@ function labelOf(category: string): string {
   return CATEGORIES.find((c) => c.id === category)?.name ?? "سایر"
 }
 
-function monthLabelShort(key: string): string {
-  const [jy, jm] = key.split("-")
-  const names = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"]
-  return `${names[Number(jm) - 1]} ${toPersianDigits(jy)}`
+import { toJalaali, toGregorian } from "jalaali-js"
+
+/** روز جلالی + کلید ماه برای یک تاریخ میلادی */
+function toJalaliDay(d: Date): { day: number; monthKey: string } {
+  const { jy, jm, jd } = toJalaali(d)
+  return { day: jd, monthKey: `${jy}-${String(jm).padStart(2, "0")}` }
+}
+
+/** تاریخ میلادی از کلید ماه جلالی + روز */
+function jalaliToDate(monthKey: string, day: number): Date {
+  const [jy, jm] = monthKey.split("-").map(Number)
+  const g = toGregorian(jy, jm, day)
+  return new Date(g.gy, g.gm - 1, g.gd, 0, 0, 0, 0)
+}
+
+/** ماه قبل/بعد برای کلید "1404-09" */
+function shiftMonthKey(key: string, delta: number): string {
+  const [jy, jm] = key.split("-").map(Number)
+  const total = jy * 12 + (jm - 1) + delta
+  const ny = Math.floor(total / 12)
+  const nm = (total % 12) + 1
+  return `${ny}-${String(nm).padStart(2, "0")}`
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { monthRange } from "@/lib/mifa/jalali"
+import { cycleRange } from "@/lib/mifa/cycle"
 
 interface TxInput {
   type: "expense" | "income"
@@ -11,10 +12,12 @@ interface TxInput {
   source?: string
 }
 
-// GET /api/transactions?month=1404-09  یا  ?all=1
+// GET /api/transactions?cycle=1404-09-08&startDay=8  یا  ?month=1404-09  یا  ?all=1
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
+    const cycle = searchParams.get("cycle")
+    const startDay = Math.min(31, Math.max(1, Number(searchParams.get("startDay")) || 1))
     const month = searchParams.get("month")
     const all = searchParams.get("all")
 
@@ -22,12 +25,18 @@ export async function GET(req: NextRequest) {
       const rows = await db.transaction.findMany({ orderBy: { date: "desc" } })
       return NextResponse.json(rows)
     }
-    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
-      return NextResponse.json({ error: "month key نامعتبر است" }, { status: 400 })
+
+    let range: { start: Date; end: Date } | null = null
+    if (cycle && /^\d{4}-\d{2}-\d{2}$/.test(cycle)) {
+      range = cycleRange(cycle, startDay)
+    } else if (month && /^\d{4}-\d{2}$/.test(month)) {
+      range = monthRange(month)
     }
-    const { start, end } = monthRange(month)
+    if (!range) {
+      return NextResponse.json({ error: "کلید دوره نامعتبر است" }, { status: 400 })
+    }
     const rows = await db.transaction.findMany({
-      where: { date: { gte: start, lt: end } },
+      where: { date: { gte: range.start, lt: range.end } },
       orderBy: { date: "desc" },
     })
     return NextResponse.json(rows)

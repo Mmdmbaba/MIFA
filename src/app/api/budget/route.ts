@@ -7,13 +7,13 @@ export interface BudgetPayload {
   categories: { category: string; amount: number }[]
 }
 
-// GET /api/budget?month=1404-09
+// GET /api/budget?month=1404-09  یا کلید دوره مثل 1404-09-08
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const month = searchParams.get("month") ?? ""
-    if (!/^\d{4}-\d{2}$/.test(month)) {
-      return NextResponse.json({ error: "month key نامعتبر است" }, { status: 400 })
+    if (!/^\d{4}-\d{2}(-\d{2})?$/.test(month)) {
+      return NextResponse.json({ error: "کلید دوره نامعتبر است" }, { status: 400 })
     }
     const [monthly, cats] = await Promise.all([
       db.budget.findUnique({ where: { month } }),
@@ -35,8 +35,8 @@ export async function PUT(req: NextRequest) {
   try {
     const body = await req.json()
     const month: string = body?.month
-    if (!/^\d{4}-\d{2}$/.test(month ?? "")) {
-      return NextResponse.json({ error: "month key نامعتبر است" }, { status: 400 })
+    if (!/^\d{4}-\d{2}(-\d{2})?$/.test(month ?? "")) {
+      return NextResponse.json({ error: "کلید دوره نامعتبر است" }, { status: 400 })
     }
 
     if (body.monthly !== undefined) {

@@ -6,10 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { CategoryBadge } from "./mifa-icons"
 import { DonutChart } from "./mifa-charts"
 import { useTransactions, useProfile, type Transaction } from "./mifa-hooks"
-import { computeMonthStats, computeLeaks } from "./mifa-logic"
+import { computeCycleStats, computeLeaks } from "./mifa-logic"
 import { computePlanStatus, type PlanStatusKind } from "@/lib/mifa/plan"
 import { formatAmount, formatPercent, formatCompact, toPersianDigits } from "@/lib/mifa/format"
-import { monthLabel, shiftMonth } from "@/lib/mifa/jalali"
+import { cycleLabel, shiftCycleKey } from "@/lib/mifa/cycle"
 import { getCategory } from "@/lib/mifa/categories"
 import { ArrowDownRight, ArrowUpRight, Target, TrendingUp, PiggyBank } from "lucide-react"
 
@@ -20,30 +20,32 @@ const STATUS_COLOR: Record<PlanStatusKind, string> = {
 }
 
 interface InsightsViewProps {
-  month: string
+  cycle: string
+  startDay: number
 }
 
-export function InsightsView({ month }: InsightsViewProps) {
-  const tx = useTransactions(month)
-  const prevTx = useTransactions(shiftMonth(month, -1))
+export function InsightsView({ cycle, startDay }: InsightsViewProps) {
+  const tx = useTransactions(cycle, startDay)
+  const prevCycle = shiftCycleKey(cycle, -1)
+  const prevTx = useTransactions(prevCycle, startDay)
   const profile = useProfile()
 
-  const stats = useMemo(() => computeMonthStats(tx.data ?? [], month), [tx.data, month])
+  const stats = useMemo(() => computeCycleStats(tx.data ?? [], cycle, startDay), [tx.data, cycle, startDay])
   const prevStats = useMemo(
-    () => computeMonthStats(prevTx.data ?? [], shiftMonth(month, -1)),
-    [prevTx.data, month]
+    () => computeCycleStats(prevTx.data ?? [], prevCycle, startDay),
+    [prevTx.data, prevCycle, startDay]
   )
 
   const status = useMemo(() => {
     const p = profile.data?.profile
     if (!p) return null
     return computePlanStatus(
-      { name: p.name, income: p.income, payday: p.payday, savingsMode: p.savingsMode as never, savingsAmount: p.savingsAmount, savingsPercent: p.savingsPercent },
+      { name: p.name, income: p.income, payday: p.payday, cycleStartDay: p.cycleStartDay, savingsMode: p.savingsMode as never, savingsAmount: p.savingsAmount, savingsPercent: p.savingsPercent },
       profile.data?.fixed ?? [],
-      month,
-      { totalExpense: stats.totalExpense, totalIncome: stats.totalIncome, dayOfMonth: stats.dayOfMonth }
+      cycle,
+      { totalExpense: stats.totalExpense, totalIncome: stats.totalIncome, dayNum: stats.dayNum }
     )
-  }, [profile.data, stats, month])
+  }, [profile.data, stats, cycle])
 
   const leaks = useMemo(
     () => computeLeaks(stats.byCategory, stats.totalExpense, prevStats.byCategory),
@@ -62,14 +64,14 @@ export function InsightsView({ month }: InsightsViewProps) {
     return <div className="space-y-4"><Skeleton className="h-56 rounded-3xl" /><Skeleton className="h-56 rounded-3xl" /></div>
   }
 
-  const dailyAvg = stats.dayOfMonth > 0 && stats.dayOfMonth <= 40
-    ? Math.round(stats.totalExpense / stats.dayOfMonth)
+  const dailyAvg = stats.dayNum > 0 && stats.dayNum <= 40
+    ? Math.round(stats.totalExpense / stats.dayNum)
     : 0
 
   return (
     <div className="space-y-5 mifa-stagger">
       <div className="pt-1">
-        <h1 className="mifa-h2">تحلیل {monthLabel(month)}</h1>
+        <h1 className="mifa-h2">تحلیل {cycleLabel(cycle, startDay)}</h1>
         <p className="text-body-sm text-muted-foreground mt-1">همین‌جاست که می‌تونی جلوی نشت پول رو بگیری</p>
       </div>
 
@@ -78,7 +80,7 @@ export function InsightsView({ month }: InsightsViewProps) {
         <h2 className="mifa-h4">نشت پول — سه دسته‌ای که بیشتر می‌خورن</h2>
         <div className="mt-4 space-y-3">
           {leaks.length === 0 ? (
-            <p className="text-body-sm text-muted-foreground py-4 text-center">این ماه هنوز خرجی ثبت نشده</p>
+            <p className="text-body-sm text-muted-foreground py-4 text-center">این دوره هنوز خرجی ثبت نشده</p>
           ) : (
             leaks.map((leak, idx) => (
               <div key={leak.category} className="flex items-center gap-3 rounded-2xl border border-border p-3.5">
@@ -101,10 +103,10 @@ export function InsightsView({ month }: InsightsViewProps) {
                       }`}>
                         {leak.deltaPct > 5 ? <ArrowUpRight className="w-3.5 h-3.5" /> :
                          leak.deltaPct < -5 ? <ArrowDownRight className="w-3.5 h-3.5" /> : null}
-                        {formatPercent(Math.abs(leak.deltaPct))} نسبت به ماه قبل
+                        {formatPercent(Math.abs(leak.deltaPct))} نسبت به دوره قبل
                       </span>
                     ) : (
-                      <span className="text-caption text-muted-foreground">ماه قبل ثبت نشده بود</span>
+                      <span className="text-caption text-muted-foreground">دوره قبل ثبت نشده بود</span>
                     )}
                   </div>
                 </div>
@@ -116,9 +118,9 @@ export function InsightsView({ month }: InsightsViewProps) {
 
       {/* پیش‌بینی بر پایه برنامه */}
       {status && (
-        <section className="glass rounded-3xl p-5" aria-label="پیش‌بینی آخر ماه">
+        <section className="glass rounded-3xl p-5" aria-label="پیش‌بینی آخر دوره">
           <h2 className="mifa-h4 inline-flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" /> پیش‌بینی آخر ماه
+            <Target className="w-5 h-5 text-primary" /> پیش‌بینی آخر دوره
           </h2>
           <div className="mt-4 grid grid-cols-3 gap-3 text-center">
             <div className="rounded-2xl bg-muted/50 px-2 py-3.5">
@@ -142,16 +144,16 @@ export function InsightsView({ month }: InsightsViewProps) {
         </section>
       )}
 
-      {/* آمار ماه */}
-      <section className="glass rounded-3xl p-5" aria-label="آمار ماه">
+      {/* آمار دوره */}
+      <section className="glass rounded-3xl p-5" aria-label="آمار دوره">
         <h2 className="mifa-h4 inline-flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-primary" /> آمار ماه
+          <TrendingUp className="w-5 h-5 text-primary" /> آمار دوره
         </h2>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <StatBox label="میانگین خرج روزانه" value={dailyAvg > 0 ? `${formatAmount(dailyAvg)} تومان` : "—"} />
           <StatBox label="خرج ۷ روز اخیر" value={stats.spentLast7 > 0 ? `${formatAmount(stats.spentLast7)} تومان` : "—"} />
           <StatBox
-            label="بزرگ‌ترین خرج ماه"
+            label="بزرگ‌ترین خرج دوره"
             value={biggest ? `${formatAmount(biggest.amount)} تومان` : "—"}
             hint={biggest?.title ?? undefined}
           />

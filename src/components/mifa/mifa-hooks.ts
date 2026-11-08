@@ -69,11 +69,11 @@ export interface BudgetData {
   categories: { category: string; amount: number }[]
 }
 
-export function useTransactions(month: string) {
+export function useTransactions(cycle: string, startDay: number) {
   return useQuery<Transaction[]>({
-    queryKey: ["transactions", month],
+    queryKey: ["transactions", cycle, startDay],
     queryFn: async () => {
-      const res = await fetch(`/api/transactions?month=${month}`)
+      const res = await fetch(`/api/transactions?cycle=${encodeURIComponent(cycle)}&startDay=${startDay}`)
       if (!res.ok) throw new Error("خطا در دریافت تراکنش‌ها")
       return res.json()
     },

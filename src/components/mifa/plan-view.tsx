@@ -9,17 +9,18 @@ import { CategoryIcon } from "./mifa-icons"
 import { useProfile } from "./mifa-hooks"
 import { buildPlan } from "@/lib/mifa/plan"
 import { formatAmount, formatCompact, toPersianDigits } from "@/lib/mifa/format"
-import { monthLabel, daysInJalaliMonth } from "@/lib/mifa/jalali"
+import { cycleLabel, daysInCycle } from "@/lib/mifa/cycle"
 import {
   Wallet, Home, PiggyBank, Sparkles, Landmark, Pencil,
   ShieldCheck, CalendarDays,
 } from "lucide-react"
 
 interface PlanViewProps {
-  month: string
+  cycle: string
+  startDay: number
 }
 
-export function PlanView({ month }: PlanViewProps) {
+export function PlanView({ cycle, startDay }: PlanViewProps) {
   const profile = useProfile()
   const [editOpen, setEditOpen] = useState(false)
 
@@ -38,7 +39,7 @@ export function PlanView({ month }: PlanViewProps) {
   if (!plan) return null
 
   const fixed = profile.data?.fixed ?? []
-  const daysTotal = daysInJalaliMonth(month)
+  const daysTotal = daysInCycle(cycle, startDay)
   const dailyAtStart = Math.floor(plan.flexible / daysTotal)
 
   return (
@@ -46,7 +47,7 @@ export function PlanView({ month }: PlanViewProps) {
       {/* ── سرتیتر ── */}
       <div className="flex items-center justify-between pt-1">
         <div>
-          <h1 className="mifa-h2">برنامه ماه</h1>
+          <h1 className="mifa-h2">برنامه دوره</h1>
           <p className="text-body-sm text-muted-foreground mt-1">پول‌ت اول تقسیم می‌شه، بعد خرج می‌کنی</p>
         </div>
         <button onClick={() => setEditOpen(true)}
@@ -59,7 +60,7 @@ export function PlanView({ month }: PlanViewProps) {
       {/* ── نوار تفکیک ── */}
       <section className="hero-card rounded-3xl p-6 text-white" aria-label="تفکیک درآمد">
         <div className="relative z-10">
-          <p className="text-caption text-white/60">درآمد ماهانه {monthLabel(month)}</p>
+          <p className="text-caption text-white/60">درآمد دوره {cycleLabel(cycle, startDay)}</p>
           <p className="numeric mifa-display mt-1.5">{formatAmount(plan.income)}</p>
           <p className="text-caption text-white/55 mt-1">تومان</p>
 
@@ -90,6 +91,10 @@ export function PlanView({ month }: PlanViewProps) {
           <PlanRow
             icon={<Landmark className="w-4.5 h-4.5" />} color="#7E9BC4"
             label={`روز واریز حقوق: ${toPersianDigits(profile.data?.profile?.payday ?? 1)}`}
+            small />
+          <PlanRow
+            icon={<CalendarDays className="w-4.5 h-4.5" />} color="#08D9D6"
+            label={`شروع دوره: روز ${toPersianDigits(startDay)} هر ماه — طول دوره ${toPersianDigits(daysTotal)} روز`}
             small />
 
           {/* خرج ثابت‌ها */}
@@ -146,7 +151,7 @@ export function PlanView({ month }: PlanViewProps) {
         <div className="mt-4 pt-4 border-t border-primary/20 flex items-center gap-2.5">
           <CalendarDays className="w-4.5 h-4.5 text-primary shrink-0" />
           <p className="text-body-sm text-muted-foreground">
-            یعنی از اول ماه هر روز حدود <span className="numeric font-bold text-foreground">{formatAmount(dailyAtStart)}</span> تومان جا داری
+            یعنی از اول دوره هر روز حدود <span className="numeric font-bold text-foreground">{formatAmount(dailyAtStart)}</span> تومان جا داری
           </p>
         </div>
       </section>
@@ -163,7 +168,7 @@ export function PlanView({ month }: PlanViewProps) {
       {/* ── دیالوگ ویرایش برنامه ── */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-lg max-h-[94vh] overflow-y-auto">
-          <DialogTitle className="sr-only">ویرایش برنامه ماه</DialogTitle>
+          <DialogTitle className="sr-only">ویرایش برنامه دوره</DialogTitle>
           <OnboardingWizard editMode onDone={() => setEditOpen(false)} />
         </DialogContent>
       </Dialog>

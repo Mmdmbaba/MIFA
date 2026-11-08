@@ -1,6 +1,6 @@
-// موتور برنامه MIFA — بیشترین پولی که تا آخر ماه می‌مونه
+// موتور برنامه MIFA — بیشترین پولی که تا آخر دوره می‌مونه
 // income − fixed − savings = پول آزاد خرج کردن؛ از اینجا به بعد همه‌چیز از همین محاسبه می‌شه
-import { daysInJalaliMonth, daysLeftInMonth, todayJalali } from "./jalali"
+import { daysInCycle, daysLeftInCycle, currentCycleKey } from "./cycle"
 
 export interface FixedItem {
   id: string
@@ -14,6 +14,7 @@ export interface PlanProfile {
   name: string
   income: number
   payday: number
+  cycleStartDay: number // روز شروع دوره مالی در تقویم جلالی (۱-۳۱)
   savingsMode: "auto" | "amount" | "percent" | "none"
   savingsAmount: number
   savingsPercent: number
@@ -79,25 +80,26 @@ export interface PlanStatus {
   overFlexible: boolean // خرجت از پول آزاد رد شده؟
   status: PlanStatusKind
   statusText: string
-  dayOfMonth: number
-  daysInMonth: number
+  dayNum: number // چندمین روز دوره
+  daysInPeriod: number // طول دوره
   daysLeft: number
-  isCurrentMonth: boolean
+  isCurrent: boolean
   extraIncome: number // درآمد ثبت‌شده اضافه روی حقوق
 }
 
-/** وضعیت زنده برنامه برای یک ماه */
+/** وضعیت زنده برنامه برای یک دوره مالی */
 export function computePlanStatus(
   profile: PlanProfile,
   fixed: FixedItem[],
-  month: string,
-  stats: { totalExpense: number; totalIncome: number; dayOfMonth: number }
+  cycle: string,
+  stats: { totalExpense: number; totalIncome: number; dayNum: number }
 ): PlanStatus {
   const plan = buildPlan(profile, fixed)
-  const isCurrentMonth = todayJalali().key === month
-  const daysInMonth = daysInJalaliMonth(month)
-  const daysLeft = isCurrentMonth ? daysLeftInMonth(month) : daysInMonth
-  const dayOfMonth = isCurrentMonth ? stats.dayOfMonth : 0
+  const startDay = profile.cycleStartDay
+  const isCurrent = currentCycleKey(startDay) === cycle
+  const daysInPeriod = daysInCycle(cycle, startDay)
+  const daysLeft = isCurrent ? daysLeftInCycle(cycle, startDay) : daysInPeriod
+  const dayNum = isCurrent ? stats.dayNum : 0
 
   const extraIncome = Math.max(0, stats.totalIncome)
   // درآمدِ ماه = حقوق ثابت + درآمدهای ثبت‌شده (مثل کارهای جانبی)
@@ -110,13 +112,13 @@ export function computePlanStatus(
   const overFlexible = remainingFlexible < 0
 
   // سقف خرج امروز: پول آزاد باقی‌مانده تقسیم بر روزهای باقی‌مانده (شامل امروز)
-  const dailyAllowance = isCurrentMonth
+  const dailyAllowance = isCurrent
     ? Math.max(0, Math.floor(Math.max(0, remainingFlexible) / Math.max(1, daysLeft)))
-    : Math.max(0, Math.floor(flexibleAll / Math.max(1, daysInMonth)))
+    : Math.max(0, Math.floor(flexibleAll / Math.max(1, daysInPeriod)))
 
   // پیش‌بینی با سرعت فعلی
-  const projectedSpend = isCurrentMonth && dayOfMonth > 0
-    ? Math.round((spent / dayOfMonth) * daysInMonth)
+  const projectedSpend = isCurrent && dayNum > 0
+    ? Math.round((spent / dayNum) * daysInPeriod)
     : spent
   const projectedFlexibleLeft = flexibleAll - projectedSpend
 
@@ -128,14 +130,14 @@ export function computePlanStatus(
   if (kept >= plan.savings && projectedFlexibleLeft >= 0) {
     status = "safe"
     statusText = projectedFlexibleLeft > 0
-      ? "با این روال آخر ماه پول اضافه‌ات می‌مونه"
+      ? "با این روال آخر دوره پول اضافه‌ات می‌مونه"
       : "دقیقاً طبق برنامه جلو می‌ری"
   } else if (kept > 0 && projectedFlexibleLeft < 0) {
     status = "watch"
     statusText = "روال خرجت داره بخشی از پس‌انداز رو می‌خوره"
   } else {
     status = "danger"
-    statusText = "با این روال آخر ماه کسری می‌مونه — سقف روزانه رو جدی بگیر"
+    statusText = "با این روال آخر دوره کسری می‌مونه — سقف روزانه رو جدی بگیر"
   }
 
   return {
@@ -149,10 +151,10 @@ export function computePlanStatus(
     overFlexible,
     status,
     statusText,
-    dayOfMonth,
-    daysInMonth,
+    dayNum,
+    daysInPeriod,
     daysLeft,
-    isCurrentMonth,
+    isCurrent,
     extraIncome,
   }
 }

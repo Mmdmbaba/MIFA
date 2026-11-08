@@ -11,6 +11,7 @@ interface ProfilePayload {
   name: string
   income: number
   payday: number
+  cycleStartDay: number
   savingsMode: string
   savingsAmount: number
   savingsPercent: number
@@ -41,6 +42,7 @@ export async function PUT(req: NextRequest) {
     const name = String(body.name ?? "").trim().slice(0, 40)
     const income = Math.round(Number(body.income))
     const payday = Math.min(31, Math.max(1, Math.round(Number(body.payday) || 1)))
+    const cycleStartDay = Math.min(31, Math.max(1, Math.round(Number(body.cycleStartDay) || 1)))
     const savingsMode = VALID_MODES.has(body.savingsMode) ? body.savingsMode : "auto"
     const savingsAmount = Math.max(0, Math.round(Number(body.savingsAmount) || 0))
     const savingsPercent = Math.min(90, Math.max(0, Math.round(Number(body.savingsPercent) || 0)))
@@ -64,8 +66,8 @@ export async function PUT(req: NextRequest) {
     const [profile] = await Promise.all([
       db.profile.upsert({
         where: { id: "me" },
-        update: { name, income, payday, savingsMode, savingsAmount, savingsPercent },
-        create: { id: "me", name, income, payday, savingsMode, savingsAmount, savingsPercent },
+        update: { name, income, payday, cycleStartDay, savingsMode, savingsAmount, savingsPercent },
+        create: { id: "me", name, income, payday, cycleStartDay, savingsMode, savingsAmount, savingsPercent },
       }),
       db.fixedExpense.deleteMany(),
       fixed.length > 0 ? db.fixedExpense.createMany({ data: fixed }) : Promise.resolve(),

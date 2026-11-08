@@ -13,11 +13,13 @@ import { CategoryIcon } from "./mifa-icons"
 import { useProfile, useSaveProfile, type ProfileData } from "./mifa-hooks"
 import { autoSavings, buildPlan, fixedTotalOf, type FixedItem } from "@/lib/mifa/plan"
 import { formatAmount, formatCompact, parseAmountInput, toPersianDigits } from "@/lib/mifa/format"
-import { daysInJalaliMonth, currentMonthKey } from "@/lib/mifa/jalali"
+import { currentMonthKey, todayJalali, shiftMonth, JALALI_MONTHS } from "@/lib/mifa/jalali"
+import { currentCycleKey, cycleLabel, daysInCycle, daysLeftInCycle } from "@/lib/mifa/cycle"
+import { MifaCalendar } from "./mifa-calendar"
 import { useToast } from "@/hooks/use-toast"
 import {
   ArrowRight, ArrowLeft, Wallet, Home, PiggyBank, Sparkles,
-  Landmark, TrendingUp, AlertTriangle, Check, Plus, X, Wand2, Coins,
+  Landmark, TrendingUp, AlertTriangle, Check, Plus, X, Wand2, Coins, CalendarDays,
 } from "lucide-react"
 
 type SavingsMode = "auto" | "amount" | "percent" | "none"
@@ -42,6 +44,9 @@ interface WizardState {
   name: string
   income: string
   payday: number
+  cycleStartDay: number
+  calMonth: string
+  calOpen: boolean
   fixed: { label: string; amount: string; icon: string }[]
   customLabel: string
   customAmount: string
@@ -57,6 +62,9 @@ function initialState(data?: ProfileData): WizardState {
     name: p?.name ?? "",
     income: p ? String(p.income) : "",
     payday: p?.payday ?? 1,
+    cycleStartDay: p?.cycleStartDay ?? 1,
+    calMonth: currentMonthKey(),
+    calOpen: false,
     fixed: (data?.fixed ?? []).map((f) => ({ label: f.label, amount: String(f.amount), icon: f.icon })),
     customLabel: "",
     customAmount: "",
@@ -106,18 +114,21 @@ export function OnboardingWizard({ onDone, editMode = false }: { onDone?: () => 
       name: s.name,
       income: incomeNum,
       payday: s.payday,
+      cycleStartDay: s.cycleStartDay,
       savingsMode: s.savingsMode,
       savingsAmount: savingsAmountNum,
       savingsPercent: s.savingsPercent,
     },
     fixedParsed
   )
-  const daysTotal = daysInJalaliMonth(currentMonthKey())
-  const dailyAtStart = Math.floor(plan.flexible / daysTotal)
+  const firstCycleKey = currentCycleKey(s.cycleStartDay)
+  const firstCycleDays = daysInCycle(firstCycleKey, s.cycleStartDay)
+  const firstDaysLeft = Math.max(1, daysLeftInCycle(firstCycleKey, s.cycleStartDay))
+  const dailyAtStart = Math.floor(plan.flexible / firstDaysLeft)
 
   const STEPS = editMode
-    ? ["شخصی", "درآمد", "خرج ثابت", "پس‌انداز", "برنامه"]
-    : ["خوش اومدی", "درآمد", "خرج ثابت", "پس‌انداز", "برنامه‌ات"]
+    ? ["شخصی", "درآمد", "شروع دوره", "خرج ثابت", "پس‌انداز", "برنامه"]
+    : ["خوش اومدی", "درآمد", "شروع دوره", "خرج ثابت", "پس‌انداز", "برنامه‌ات"]
 
   const canNext = (() => {
     switch (s.step) {
@@ -127,7 +138,7 @@ export function OnboardingWizard({ onDone, editMode = false }: { onDone?: () => 
     }
   })()
 
-  const go = (delta: number) => set({ step: Math.min(4, Math.max(0, s.step + delta)) })
+  const go = (delta: number) => set({ step: Math.min(5, Math.max(0, s.step + delta)) })
 
   const addFixed = (label: string, icon: string, amount: string) => {
     const v = parseAmountInput(amount)
@@ -151,6 +162,7 @@ export function OnboardingWizard({ onDone, editMode = false }: { onDone?: () => 
         name: s.name.trim(),
         income: incomeNum,
         payday: s.payday,
+        cycleStartDay: s.cycleStartDay,
         savingsMode: s.savingsMode,
         savingsAmount: savingsAmountNum,
         savingsPercent: s.savingsPercent,
@@ -186,7 +198,7 @@ export function OnboardingWizard({ onDone, editMode = false }: { onDone?: () => 
           ))}
         </div>
         <span className="text-caption text-muted-foreground numeric shrink-0">
-          {toPersianDigits(s.step + 1)}/{toPersianDigits(5)}
+          {toPersianDigits(s.step + 1)}/{toPersianDigits(STEPS.length)}
         </span>
       </div>
 
@@ -283,8 +295,114 @@ export function OnboardingWizard({ onDone, editMode = false }: { onDone?: () => 
           </div>
         )}
 
-        {/* مرحله ۲ — خرج ثابت */}
-        {s.step === 2 && (
+        {/* مرحله ۲ — شروع دوره مالی */}
+        {s.step === 2 && (() => {
+          const t = todayJalali()
+          const todayJd = t.day
+          const todayMonth = JALALI_MONTHS[Number(t.key.split("-")[1]) - 1]
+          const mode =
+            s.calOpen ? "custom"
+            : s.cycleStartDay === s.payday && s.payday !== 1 ? "payday"
+            : s.cycleStartDay === todayJd && todayJd !== 1 ? "today"
+            : s.cycleStartDay === 1 ? "month"
+            : "custom"
+          const optCls = (m: string) =>
+            `text-start rounded-2xl border p-3.5 transition-colors ${
+              mode === m ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+            }`
+          return (
+            <div className="space-y-5">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mx-auto mb-4">
+                  <CalendarDays className="w-8 h-8" />
+                </div>
+                <h2 className="mifa-h3 text-foreground">دوره مالی از کی شروع بشه؟</h2>
+                <p className="mifa-body-sm text-muted-foreground mt-2">
+                  هر ماه همین روز، پولت دوباره تقسیم می‌شه — مثلاً از اول آذر یا هر روز دیگه از تقویم
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <button type="button" onClick={() => set({ cycleStartDay: 1 })} aria-pressed={mode === "month"} className={optCls("month")}>
+                  <div className="flex items-center gap-3">
+                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mode === "month" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                      <CalendarDays className="w-5 h-5" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-body text-foreground">اول ماه تقویمی</p>
+                      <p className="text-caption text-muted-foreground mt-0.5">هر ماه از روز ۱ شروع می‌شه</p>
+                    </div>
+                    {mode === "month" && <Check className="w-5 h-5 text-primary shrink-0" />}
+                  </div>
+                </button>
+
+                <button type="button" onClick={() => set({ cycleStartDay: s.payday })} aria-pressed={mode === "payday"} className={optCls("payday")}>
+                  <div className="flex items-center gap-3">
+                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mode === "payday" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                      <Landmark className="w-5 h-5" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-body text-foreground flex items-center gap-2">
+                        روز واریز حقوق
+                        <span className="text-[9px] font-bold bg-primary/15 text-primary rounded-full px-2 py-0.5">پیشنهاد MIFA</span>
+                      </p>
+                      <p className="text-caption text-muted-foreground mt-0.5">هر ماه همزمان با حقوق — روز {toPersianDigits(s.payday)}</p>
+                    </div>
+                    {mode === "payday" && <Check className="w-5 h-5 text-primary shrink-0" />}
+                  </div>
+                </button>
+
+                <button type="button" onClick={() => set({ cycleStartDay: todayJd })} aria-pressed={mode === "today"} className={optCls("today")}>
+                  <div className="flex items-center gap-3">
+                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mode === "today" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                      <Sparkles className="w-5 h-5" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-body text-foreground">همین امروز</p>
+                      <p className="text-caption text-muted-foreground mt-0.5">از {toPersianDigits(todayJd)} {todayMonth} به بعد رو حساب کن</p>
+                    </div>
+                    {mode === "today" && <Check className="w-5 h-5 text-primary shrink-0" />}
+                  </div>
+                </button>
+
+                <button type="button" onClick={() => set({ calOpen: !s.calOpen })} aria-pressed={mode === "custom"} className={optCls("custom")}>
+                  <div className="flex items-center gap-3">
+                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mode === "custom" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                      <CalendarDays className="w-5 h-5" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-body text-foreground">از تقویم انتخاب کنم</p>
+                      <p className="text-caption text-muted-foreground mt-0.5">هر روزی که خودت بخوای</p>
+                    </div>
+                    {mode === "custom" && <Check className="w-5 h-5 text-primary shrink-0" />}
+                  </div>
+                </button>
+              </div>
+
+              {s.calOpen && (
+                <div className="rounded-2xl border border-border bg-muted/30 p-3">
+                  <MifaCalendar
+                    monthKey={s.calMonth}
+                    onShiftMonth={(d) => set({ calMonth: shiftMonth(s.calMonth, d) })}
+                    selectedDay={s.cycleStartDay}
+                    onSelectDay={(day) => set({ cycleStartDay: day })}
+                  />
+                </div>
+              )}
+
+              <div className="rounded-2xl bg-primary/10 border border-primary/25 px-4 py-3 flex items-start gap-2.5">
+                <CalendarDays className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <p className="text-body-sm text-foreground">
+                  دوره اول: <span className="font-bold">{cycleLabel(firstCycleKey, s.cycleStartDay)}</span> — {toPersianDigits(firstCycleDays)} روز
+                  {firstDaysLeft < firstCycleDays ? ` · ${toPersianDigits(firstDaysLeft)} روزش باقی مونده` : ""}
+                </p>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* مرحله ۳ — خرج ثابت */}
+        {s.step === 3 && (
           <div className="space-y-6">
             <div className="text-center">
               <div className="w-16 h-16 rounded-2xl bg-mifa-warning/15 text-mifa-warning flex items-center justify-center mx-auto mb-4">
@@ -375,8 +493,8 @@ export function OnboardingWizard({ onDone, editMode = false }: { onDone?: () => 
           </div>
         )}
 
-        {/* مرحله ۳ — پس‌انداز */}
-        {s.step === 3 && (
+        {/* مرحله ۴ — پس‌انداز */}
+        {s.step === 4 && (
           <div className="space-y-5">
             <div className="text-center">
               <div className="w-16 h-16 rounded-2xl bg-[#2BD38B]/15 text-[#2BD38B] flex items-center justify-center mx-auto mb-4">
@@ -503,8 +621,8 @@ export function OnboardingWizard({ onDone, editMode = false }: { onDone?: () => 
           </div>
         )}
 
-        {/* مرحله ۴ — خلاصه برنامه */}
-        {s.step === 4 && (
+        {/* مرحله ۵ — خلاصه برنامه */}
+        {s.step === 5 && (
           <div className="space-y-6">
             <div className="text-center">
               <div className="w-16 h-16 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mx-auto mb-4">
@@ -586,10 +704,10 @@ export function OnboardingWizard({ onDone, editMode = false }: { onDone?: () => 
             قبلی
           </Button>
         )}
-        {s.step < 4 ? (
+        {s.step < 5 ? (
           <Button onClick={() => canNext && go(1)} disabled={!canNext}
             className="h-13 flex-1 bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 disabled:opacity-40">
-            {STEPS[s.step + 1] === "درآمد" ? "بزن بریم" : s.step === 3 ? "برنامه‌ات رو ببین" : "بعدی"}
+            {STEPS[s.step + 1] === "درآمد" ? "بزن بریم" : s.step === 4 ? "برنامه‌ات رو ببین" : "بعدی"}
             <ArrowLeft className="w-5 h-5" />
           </Button>
         ) : (

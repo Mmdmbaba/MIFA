@@ -1,7 +1,7 @@
 "use client"
 
-// پوسته اصلی MIFA v2 — گیت onboarding، هدر، داک شناور و ناوبری
-import { useState } from "react"
+// پوسته اصلی MIFA v2 — گیت onboarding، هدر، داک شناور و ناوبری (بر پایه دوره مالی)
+import { useEffect, useState } from "react"
 import { RibbonMark, MifaWordmark } from "./mifa-logo"
 import { OnboardingWizard } from "./onboarding"
 import { DashboardView } from "./dashboard-view"
@@ -10,7 +10,8 @@ import { PlanView } from "./plan-view"
 import { InsightsView } from "./insights-view"
 import { SettingsView } from "./settings-view"
 import { QuickAddDialog } from "./quick-add-dialog"
-import { currentMonthKey, monthLabel, shiftMonth, todayJalali } from "@/lib/mifa/jalali"
+import { currentCycleKey, cycleLabel, shiftCycleKey } from "@/lib/mifa/cycle"
+import { todayJalali } from "@/lib/mifa/jalali"
 import { useProfile } from "./mifa-hooks"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
@@ -29,10 +30,18 @@ const TABS: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
 export function MifaApp() {
   const profile = useProfile()
   const [tab, setTab] = useState<Tab>("dashboard")
-  const [month, setMonth] = useState(currentMonthKey())
+  const [cycleOverride, setCycleOverride] = useState<string | null>(null)
   const [addOpen, setAddOpen] = useState(false)
   const { setTheme, resolvedTheme } = useTheme()
   const today = todayJalali()
+
+  const startDay = profile.data?.profile?.cycleStartDay ?? 1
+  const cycle = cycleOverride ?? currentCycleKey(startDay)
+
+  // با تغییر روز شروع دوره، برگرد به دوره جاری
+  useEffect(() => {
+    setCycleOverride(null)
+  }, [startDay])
 
   // ── لودینگ اولیه ──
   if (profile.isLoading) {
@@ -62,8 +71,9 @@ export function MifaApp() {
     )
   }
 
-  const isCurrent = month === today.key
-  const canGoNext = month < today.key
+  const currentCycle = currentCycleKey(startDay)
+  const isCurrent = cycle === currentCycle
+  const canGoNext = cycle < currentCycle
   const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark")
 
   return (
@@ -76,23 +86,23 @@ export function MifaApp() {
             <MifaWordmark tagline={false} />
           </button>
 
-          {/* انتخاب ماه */}
+          {/* انتخاب دوره */}
           {tab !== "settings" && (
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" disabled={!canGoNext}
-                onClick={() => setMonth(shiftMonth(month, 1))} aria-label="ماه بعد">
+                onClick={() => setCycleOverride(shiftCycleKey(cycle, 1))} aria-label="دوره بعد">
                 <ChevronRight className="w-5 h-5" />
               </Button>
               <button
-                onClick={() => setMonth(today.key)}
-                className={`min-w-24 text-center rounded-xl px-2.5 py-1.5 text-body-sm font-bold transition-colors ${
+                onClick={() => setCycleOverride(null)}
+                className={`min-w-28 max-w-40 text-center rounded-xl px-2 py-1.5 text-body-sm font-bold transition-colors truncate ${
                   isCurrent ? "text-primary" : "text-foreground hover:bg-muted"
                 }`}
-                title="برگشت به ماه جاری">
-                {monthLabel(month)}
+                title="برگشت به دوره جاری">
+                {cycleLabel(cycle, startDay)}
               </button>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl"
-                onClick={() => setMonth(shiftMonth(month, -1))} aria-label="ماه قبل">
+                onClick={() => setCycleOverride(shiftCycleKey(cycle, -1))} aria-label="دوره قبل">
                 <ChevronLeft className="w-5 h-5" />
               </Button>
             </div>
@@ -107,15 +117,15 @@ export function MifaApp() {
 
       {/* ── محتوا ── */}
       <main className="relative z-10 w-full max-w-lg mx-auto px-5 py-5 pb-36">
-        {tab === "dashboard" && <DashboardView month={month} onSeeAll={() => setTab("transactions")} onGoPlan={() => setTab("plan")} />}
-        {tab === "transactions" && <TransactionsView month={month} />}
-        {tab === "plan" && <PlanView month={month} />}
-        {tab === "insights" && <InsightsView month={month} />}
+        {tab === "dashboard" && <DashboardView cycle={cycle} startDay={startDay} onSeeAll={() => setTab("transactions")} onGoPlan={() => setTab("plan")} />}
+        {tab === "transactions" && <TransactionsView cycle={cycle} startDay={startDay} />}
+        {tab === "plan" && <PlanView cycle={cycle} startDay={startDay} />}
+        {tab === "insights" && <InsightsView cycle={cycle} startDay={startDay} />}
         {tab === "settings" && <SettingsView onGoBack={() => setTab("dashboard")} />}
       </main>
 
       {/* ── دیالوگ ثبت ── */}
-      <QuickAddDialog open={addOpen} onOpenChange={setAddOpen} month={month} />
+      <QuickAddDialog open={addOpen} onOpenChange={setAddOpen} />
 
       {/* ── داک شناور پایین ── */}
       <nav className="fixed bottom-0 inset-x-0 z-40 pb-[calc(env(safe-area-inset-bottom)+14px)] pt-2 pointer-events-none"

@@ -24,14 +24,15 @@ model Transaction {
 
 // پروفایل کاربر — حاصل onboarding اولین ورود
 model Profile {
-  id             String   @id @default("me")
-  name           String   // اسم کاربر
-  income         Int      // درآمد ماهانه (تومان)
-  payday         Int      @default(1) // روز واریز حقوق در ماه جلالی (۱-۳۱)
-  savingsMode    String   @default("auto") // "auto" | "amount" | "percent" | "none"
-  savingsAmount  Int      @default(0) // مبلغ مشخص پس‌انداز (تومان)
-  savingsPercent Int      @default(20) // درصد پس‌انداز
-  onboardedAt    DateTime @default(now())
+  id            String   @id @default("me")
+  name          String   // اسم کاربر
+  income        Int      // درآمد ماهانه (تومان)
+  payday        Int      @default(1) // روز واریز حقوق در ماه جلالی (۱-۳۱)
+  cycleStartDay Int      @default(1) // روز شروع دوره مالی در تقویم جلالی (۱-۳۱)
+  savingsMode   String   @default("auto") // "auto" | "amount" | "percent" | "none"
+  savingsAmount Int      @default(0) // مبلغ مشخص پس‌انداز (تومان)
+  savingsPercent Int     @default(20) // درصد پس‌انداز
+  onboardedAt   DateTime @default(now())
 }
 
 // هزینه ثابت ماهانه — اجاره، قسط، قبض‌ها، اشتراک‌ها و ...

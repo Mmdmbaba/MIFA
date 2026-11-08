@@ -1,19 +1,20 @@
 "use client"
 
-// داشبورد MIFA v2 — «امروز چقدر می‌تونی خرج کنی؟» و «چقدر آخر ماه می‌مونه؟»
+// داشبورد MIFA v2 — «امروز چقدر می‌تونی خرج کنی؟» و «چقدر آخر دوره می‌مونه؟»
 import { useMemo } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CategoryBadge } from "./mifa-icons"
 import { DailyBars } from "./mifa-charts"
 import type { Transaction } from "./mifa-hooks"
 import { useTransactions, useProfile } from "./mifa-hooks"
-import { computeMonthStats } from "./mifa-logic"
+import { computeCycleStats } from "./mifa-logic"
 import { computePlanStatus, type PlanStatusKind } from "@/lib/mifa/plan"
 import { formatAmount, formatCompact, formatPercent, toPersianDigits } from "@/lib/mifa/format"
-import { monthLabel, todayJalali, jalaliDayOf, fullJalaliDate } from "@/lib/mifa/jalali"
+import { cycleLabel, cycleDayOf, daysInCycle } from "@/lib/mifa/cycle"
+import { fullJalaliDate } from "@/lib/mifa/jalali"
 import { getCategory } from "@/lib/mifa/categories"
 import {
-  AlertTriangle, Sparkles, Flame, PiggyBank, Wallet, Plus,
+  AlertTriangle, Sparkles, Flame, PiggyBank, Wallet,
   ArrowLeft, TrendingDown, TrendingUp,
 } from "lucide-react"
 
@@ -24,41 +25,41 @@ const STATUS_COLOR: Record<PlanStatusKind, string> = {
 }
 
 interface DashboardViewProps {
-  month: string
+  cycle: string
+  startDay: number
   onSeeAll: () => void
   onGoPlan: () => void
 }
 
-export function DashboardView({ month, onSeeAll, onGoPlan }: DashboardViewProps) {
-  const tx = useTransactions(month)
+export function DashboardView({ cycle, startDay, onSeeAll, onGoPlan }: DashboardViewProps) {
+  const tx = useTransactions(cycle, startDay)
   const profile = useProfile()
 
-  const stats = useMemo(() => computeMonthStats(tx.data ?? [], month), [tx.data, month])
-  const today = todayJalali()
-  const isCurrentMonth = today.key === month
+  const stats = useMemo(() => computeCycleStats(tx.data ?? [], cycle, startDay), [tx.data, cycle, startDay])
 
   const status = useMemo(() => {
     const p = profile.data?.profile
     if (!p) return null
     return computePlanStatus(
-      { name: p.name, income: p.income, payday: p.payday, savingsMode: p.savingsMode as never, savingsAmount: p.savingsAmount, savingsPercent: p.savingsPercent },
+      { name: p.name, income: p.income, payday: p.payday, cycleStartDay: p.cycleStartDay, savingsMode: p.savingsMode as never, savingsAmount: p.savingsAmount, savingsPercent: p.savingsPercent },
       profile.data?.fixed ?? [],
-      month,
-      { totalExpense: stats.totalExpense, totalIncome: stats.totalIncome, dayOfMonth: stats.dayOfMonth }
+      cycle,
+      { totalExpense: stats.totalExpense, totalIncome: stats.totalIncome, dayNum: stats.dayNum }
     )
-  }, [profile.data, stats, month])
+  }, [profile.data, stats, cycle])
 
   const dailyBars = useMemo(() => {
     if (!tx.data) return []
+    const total = daysInCycle(cycle, startDay)
     const arr: { day: number; amount: number }[] = []
-    for (let d = 1; d <= stats.daysInMonth; d++) arr.push({ day: d, amount: 0 })
+    for (let d = 1; d <= total; d++) arr.push({ day: d, amount: 0 })
     for (const t of tx.data) {
       if (t.type !== "expense") continue
-      const day = jalaliDayOf(new Date(t.date), month)
-      if (day !== null) arr[day - 1].amount += t.amount
+      const day = cycleDayOf(new Date(t.date), cycle)
+      if (day !== null && day <= total) arr[day - 1].amount += t.amount
     }
     return arr
-  }, [tx.data, month, stats.daysInMonth])
+  }, [tx.data, cycle, startDay])
 
   const recent = useMemo(() => (tx.data ?? []).slice(0, 5), [tx.data])
 
@@ -112,7 +113,7 @@ export function DashboardView({ month, onSeeAll, onGoPlan }: DashboardViewProps)
 
             {/* عدد اصلی */}
             <div className="flex-1 min-w-0 text-center sm:text-start">
-              {status.isCurrentMonth ? (
+              {status.isCurrent ? (
                 <>
                   <p className="text-caption text-white/60">امروز مجاز به خرجی:</p>
                   <div className="flex items-baseline justify-center sm:justify-start gap-1.5 mt-1 flex-wrap">
@@ -132,7 +133,7 @@ export function DashboardView({ month, onSeeAll, onGoPlan }: DashboardViewProps)
                 </>
               ) : (
                 <>
-                  <p className="text-caption text-white/60">مجموع خرج {monthLabel(month)}:</p>
+                  <p className="text-caption text-white/60">مجموع خرج {cycleLabel(cycle, startDay)}:</p>
                   <div className="flex items-baseline justify-center sm:justify-start gap-1.5 mt-1 flex-wrap">
                     <span className="numeric text-[34px] leading-none font-black sm:mifa-display">{formatAmount(stats.totalExpense)}</span>
                     <span className="text-body text-white/70">تومان</span>
@@ -147,10 +148,10 @@ export function DashboardView({ month, onSeeAll, onGoPlan }: DashboardViewProps)
             <PiggyBank className="w-5 h-5 shrink-0" style={{ color: STATUS_COLOR[status.status] }} />
             <div className="flex-1 min-w-0">
               <p className="text-body-sm font-bold">
-                با این روال آخر ماه <span className="numeric" style={{ color: STATUS_COLOR[status.status] }}>{formatAmount(Math.max(0, status.kept))}</span> تومان برات می‌مونه
+                با این روال آخر دوره <span className="numeric" style={{ color: STATUS_COLOR[status.status] }}>{formatAmount(Math.max(0, status.kept))}</span> تومان برات می‌مونه
               </p>
               <p className="text-caption text-white/55 mt-0.5">
-                شامل {formatCompact(status.plan.savings)} پس‌انداز {status.isCurrentMonth ? `و ${toPersianDigits(status.daysLeft)} روز تا آخر ماه` : ""}
+                شامل {formatCompact(status.plan.savings)} پس‌انداز {status.isCurrent ? `و ${toPersianDigits(status.daysLeft)} روز تا آخر دوره` : ""}
               </p>
             </div>
           </div>
@@ -158,7 +159,7 @@ export function DashboardView({ month, onSeeAll, onGoPlan }: DashboardViewProps)
       )}
 
       {/* ── بنر هشدار/تشویق ── */}
-      {status && isCurrentMonth && stats.totalExpense > 0 && (
+      {status && status.isCurrent && stats.totalExpense > 0 && (
         <div className={`rounded-2xl border px-4 py-3.5 flex items-start gap-3 ${
           status.status === "danger"
             ? "border-[#FF2E63]/40 bg-[#FF2E63]/[0.08]"
@@ -187,7 +188,7 @@ export function DashboardView({ month, onSeeAll, onGoPlan }: DashboardViewProps)
       {status && (
         <div className="grid grid-cols-3 gap-3">
           <StatChip icon={<Wallet className="w-4 h-4" />} label="خرج امروز" value={formatCompact(spentToday)} />
-          <StatChip icon={<Flame className="w-4 h-4" />} label="خرج این ماه" value={formatCompact(stats.totalExpense)} />
+          <StatChip icon={<Flame className="w-4 h-4" />} label="خرج این دوره" value={formatCompact(stats.totalExpense)} />
           <StatChip
             icon={status.overFlexible ? <TrendingUp className="w-4 h-4 text-[#FF5B83]" /> : <TrendingDown className="w-4 h-4 text-primary" />}
             label="پول آزاد باقی‌مانده"
@@ -197,7 +198,7 @@ export function DashboardView({ month, onSeeAll, onGoPlan }: DashboardViewProps)
         </div>
       )}
 
-      {/* ── خالی بودن ماه ── */}
+      {/* ── خالی بودن دوره ── */}
       {(tx.data ?? []).length === 0 && (
         <div className="rounded-3xl border border-dashed border-border px-6 py-10 text-center">
           <Sparkles className="w-8 h-8 text-primary mx-auto" />
@@ -244,13 +245,13 @@ export function DashboardView({ month, onSeeAll, onGoPlan }: DashboardViewProps)
       {/* ── نمودار روزانه ── */}
       {dailyBars.length > 0 && stats.totalExpense > 0 && (
         <section className="glass rounded-3xl p-5">
-          <h2 className="mifa-h4">خرج روزهای {monthLabel(month)}</h2>
+          <h2 className="mifa-h4">خرج روزهای {cycleLabel(cycle, startDay)}</h2>
           <div className="mt-4">
-            <DailyBars bars={dailyBars} height={96} />
+            <DailyBars bars={dailyBars} height={96} todayIndex={status?.isCurrent ? stats.dayNum - 1 : -1} />
             <div className="flex justify-between text-caption text-muted-foreground mt-2 numeric">
-              <span>{toPersianDigits(1)}</span>
-              <span>{toPersianDigits(Math.max(1, stats.dayOfMonth <= 40 ? stats.dayOfMonth : stats.daysInMonth))}</span>
-              <span>{toPersianDigits(stats.daysInMonth)}</span>
+              <span>روز ۱</span>
+              <span>{status?.isCurrent ? `امروز (${toPersianDigits(stats.dayNum)})` : ""}</span>
+              <span>روز {toPersianDigits(stats.daysInPeriod)}</span>
             </div>
           </div>
         </section>
