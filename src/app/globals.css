@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── فونت Vazirmatn ─── */
+/* ─── فونت Vazirmatn (سلف‌هاست) ─── */
 @font-face {
   font-family: "Vazirmatn";
   src: url("/fonts/Vazirmatn-Regular.ttf") format("truetype");
@@ -79,104 +79,116 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
 
-  /* رنگ‌های برند MIFA */
+  /* رنگ‌های ثابت برند MIFA (از mifa-tokens.css) */
   --color-mifa-teal: #08D9D6;
-  --color-mifa-teal-soft: #C7F7F5;
+  --color-mifa-teal-100: #C7F7F5;
+  --color-mifa-teal-200: #91EFEC;
+  --color-mifa-teal-700: #058E8C;
   --color-mifa-teal-ink: #073F40;
   --color-mifa-navy: #252A34;
+  --color-mifa-navy-800: #1C2028;
+  --color-mifa-navy-900: #14171D;
   --color-mifa-rose: #FF2E63;
+  --color-mifa-rose-100: #FFD5E0;
+  --color-mifa-rose-400: #FF527F;
   --color-mifa-gray: #EAEAEA;
   --color-mifa-success: #2BD38B;
   --color-mifa-warning: #E2AD5D;
 }
 
-/* ══════════════════════════════════════════════
-   MIFA v2 — «شب برند» (پیش‌فرض تیره، عمیق و درخشان)
-   ══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   MIFA v3 — «شبِ سرمه‌ای»
+   تیره: سطوح سرمه‌ای برند (#252A34) — روشن: خاکستری برند (#EAEAEA)
+   teal = اقدام و مثبت؛ rose = فقط هشدار و overspend
+   ═══════════════════════════════════════════════════════ */
 :root {
-  --radius: 1.25rem;
+  --radius: 1.1rem;
   --font-mifa: "Vazirmatn", "Peyda", "IRANSansX", sans-serif;
 
-  /* لایت */
-  --background: #ECEDEF;
+  /* لایت — مطابق برند کیت */
+  --background: #EAEAEA;
   --foreground: #252A34;
   --card: #FFFFFF;
   --card-foreground: #252A34;
   --popover: #FFFFFF;
   --popover-foreground: #252A34;
   --primary: #08D9D6;
-  --primary-foreground: #063B3D;
-  --secondary: #E4E7EA;
+  --primary-foreground: #062E30;
+  --secondary: #F5F6F6;
   --secondary-foreground: #252A34;
-  --muted: #E7E9EC;
-  --muted-foreground: #6B7480;
-  --accent: #DFF9F8;
+  --muted: #E2E4E6;
+  --muted-foreground: #68717D;
+  --accent: #E5FCFB;
   --accent-foreground: #073F40;
   --destructive: #FF2E63;
-  --border: #DFE3E6;
-  --input: #D8DDE0;
+  --border: #D9DDDF;
+  --input: #CDD3D6;
   --ring: #08D9D6;
   --chart-1: #08D9D6;
-  --chart-2: #34808B;
+  --chart-2: #347F89;
   --chart-3: #D3A45B;
   --chart-4: #70A58F;
-  --chart-5: #7896B0;
+  --chart-5: #8C7565;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #252A34;
   --sidebar-primary: #08D9D6;
-  --sidebar-primary-foreground: #063B3D;
-  --sidebar-accent: #DFF9F8;
+  --sidebar-primary-foreground: #062E30;
+  --sidebar-accent: #E5FCFB;
   --sidebar-accent-foreground: #073F40;
-  --sidebar-border: #DFE3E6;
+  --sidebar-border: #D9DDDF;
   --sidebar-ring: #08D9D6;
 
   --hero-from: #252A34;
-  --hero-to: #1D2430;
-  --glow-teal: rgba(8, 217, 214, 0.14);
-  --glow-rose: rgba(255, 46, 99, 0.10);
-  --dock-bg: rgba(255, 255, 255, 0.92);
-  --dock-border: rgba(37, 42, 52, 0.08);
+  --hero-mid: #2B3341;
+  --hero-to: #1C2028;
+  --glow-teal: rgba(8, 217, 214, 0.12);
+  --glow-rose: rgba(255, 46, 99, 0.08);
+  --tabbar-bg: rgba(255, 255, 255, 0.9);
+  --tabbar-border: rgba(37, 42, 52, 0.09);
+  --ring-track: rgba(255, 255, 255, 0.14);
 }
 
 .dark {
-  --background: #141821;
+  --background: #252A34;
   --foreground: #EAEAEA;
-  --card: #1C222D;
+  --card: #2D333F;
   --card-foreground: #EAEAEA;
-  --popover: #232A36;
+  --popover: #343B48;
   --popover-foreground: #EAEAEA;
   --primary: #08D9D6;
-  --primary-foreground: #063B3D;
-  --secondary: #232A36;
+  --primary-foreground: #062E30;
+  --secondary: #343B48;
   --secondary-foreground: #EAEAEA;
-  --muted: #232A36;
-  --muted-foreground: #8B94A3;
+  --muted: #313845;
+  --muted-foreground: #949CA8;
   --accent: #0B4A4B;
   --accent-foreground: #C7F7F5;
   --destructive: #FF5B83;
-  --border: rgba(255, 255, 255, 0.07);
-  --input: rgba(255, 255, 255, 0.12);
+  --border: #3B4351;
+  --input: #48515E;
   --ring: #08D9D6;
   --chart-1: #08D9D6;
   --chart-2: #5CE7E3;
   --chart-3: #E2AD5D;
   --chart-4: #55C49A;
-  --chart-5: #7E9BC4;
-  --sidebar: #1C222D;
+  --chart-5: #C18B97;
+  --sidebar: #2D333F;
   --sidebar-foreground: #EAEAEA;
   --sidebar-primary: #08D9D6;
-  --sidebar-primary-foreground: #063B3D;
+  --sidebar-primary-foreground: #062E30;
   --sidebar-accent: #0B4A4B;
   --sidebar-accent-foreground: #C7F7F5;
-  --sidebar-border: rgba(255, 255, 255, 0.07);
+  --sidebar-border: #3B4351;
   --sidebar-ring: #08D9D6;
 
-  --hero-from: #202633;
-  --hero-to: #161B26;
-  --glow-teal: rgba(8, 217, 214, 0.16);
-  --glow-rose: rgba(255, 46, 99, 0.12);
-  --dock-bg: rgba(28, 34, 45, 0.88);
-  --dock-border: rgba(255, 255, 255, 0.08);
+  --hero-from: #2D333F;
+  --hero-mid: #272D39;
+  --hero-to: #1C2028;
+  --glow-teal: rgba(8, 217, 214, 0.14);
+  --glow-rose: rgba(255, 46, 99, 0.1);
+  --tabbar-bg: rgba(37, 42, 52, 0.86);
+  --tabbar-border: rgba(255, 255, 255, 0.08);
+  --ring-track: rgba(255, 255, 255, 0.12);
 }
 
 @layer base {
@@ -193,9 +205,12 @@
   .numeric {
     font-variant-numeric: tabular-nums lining-nums;
   }
+  ::selection {
+    background: color-mix(in srgb, #08D9D6 30%, transparent);
+  }
 }
 
-/* ── پس‌زمینه زنده: هاله‌های نرم برند ── */
+/* ── پس‌زمینه: هاله‌های نرم برند ── */
 .mifa-bg {
   position: relative;
   min-height: 100vh;
@@ -205,81 +220,87 @@
   content: "";
   position: fixed;
   border-radius: 9999px;
-  filter: blur(110px);
+  filter: blur(120px);
   pointer-events: none;
   z-index: 0;
 }
 .mifa-bg::before {
-  width: 46vw; height: 46vw;
-  top: -18vw; inset-inline-start: -12vw;
+  width: 48vw;
+  height: 48vw;
+  top: -20vw;
+  inset-inline-start: -14vw;
   background: var(--glow-teal);
 }
 .mifa-bg::after {
-  width: 40vw; height: 40vw;
-  bottom: -16vw; inset-inline-end: -10vw;
+  width: 42vw;
+  height: 42vw;
+  bottom: -18vw;
+  inset-inline-end: -12vw;
   background: var(--glow-rose);
 }
 
-/* ── کارت شیشه‌ای ── */
-.glass {
-  background: color-mix(in srgb, var(--card) 86%, transparent);
-  backdrop-filter: blur(14px);
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 2px rgba(10, 14, 20, 0.06), 0 8px 28px -12px rgba(10, 14, 20, 0.14);
-}
-.dark .glass {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 10px 34px -14px rgba(0, 0, 0, 0.5);
-}
-
-/* ── کارت هیرو گرادیانی ── */
+/* ── کارت هیرو سرمه‌ای ── */
 .hero-card {
-  background: linear-gradient(150deg, var(--hero-from) 0%, var(--hero-to) 100%);
+  background: linear-gradient(155deg, var(--hero-from) 0%, var(--hero-mid) 52%, var(--hero-to) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   position: relative;
   overflow: hidden;
+  color: #EAEAEA;
 }
 .hero-card::before {
   content: "";
   position: absolute;
-  width: 220px; height: 220px;
+  width: 240px;
+  height: 240px;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(8, 217, 214, 0.22) 0%, transparent 70%);
-  top: -80px; inset-inline-end: -60px;
+  background: radial-gradient(circle, rgba(8, 217, 214, 0.2) 0%, transparent 68%);
+  top: -90px;
+  inset-inline-end: -70px;
   pointer-events: none;
 }
 .hero-card::after {
   content: "";
   position: absolute;
-  width: 180px; height: 180px;
+  width: 190px;
+  height: 190px;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(255, 46, 99, 0.16) 0%, transparent 70%);
-  bottom: -70px; inset-inline-start: -40px;
+  background: radial-gradient(circle, rgba(255, 46, 99, 0.13) 0%, transparent 70%);
+  bottom: -80px;
+  inset-inline-start: -50px;
   pointer-events: none;
 }
 
-/* ── داک پایین شناور ── */
-.dock {
-  background: var(--dock-bg);
-  backdrop-filter: blur(18px);
-  border: 1px solid var(--dock-border);
-  box-shadow: 0 12px 40px -10px rgba(8, 14, 22, 0.35);
+/* ── نوار پایین ── */
+.tabbar {
+  background: var(--tabbar-bg);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--tabbar-border);
+  box-shadow: 0 14px 44px -12px rgba(8, 12, 20, 0.4);
+}
+
+/* ── کارت شیشه‌ای ── */
+.glass {
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(10, 14, 20, 0.05), 0 10px 30px -14px rgba(10, 14, 20, 0.16);
 }
 
 /* ── تایپوگرافی ── */
 .mifa-display {
-  font-size: 44px;
-  line-height: 1.1;
+  font-size: 42px;
+  line-height: 1.12;
   font-weight: 900;
   letter-spacing: -0.02em;
 }
 .mifa-h2 {
-  font-size: 26px;
-  line-height: 36px;
+  font-size: 25px;
+  line-height: 35px;
   font-weight: 800;
 }
 .mifa-h3 {
-  font-size: 21px;
-  line-height: 30px;
+  font-size: 20px;
+  line-height: 29px;
   font-weight: 700;
 }
 .mifa-h4 {
@@ -305,10 +326,10 @@
 
 /* ── درخشش عدد هیرو ── */
 .text-glow {
-  text-shadow: 0 0 32px rgba(8, 217, 214, 0.45);
+  text-shadow: 0 0 34px rgba(8, 217, 214, 0.5);
 }
 .text-glow-rose {
-  text-shadow: 0 0 32px rgba(255, 46, 99, 0.4);
+  text-shadow: 0 0 34px rgba(255, 46, 99, 0.45);
 }
 
 /* ── اسکرول‌بار ظریف ── */
@@ -320,14 +341,24 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--muted-foreground) 30%, transparent);
+  background: color-mix(in srgb, var(--muted-foreground) 32%, transparent);
   border-radius: 8px;
+}
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 32%, transparent) transparent;
 }
 
 /* ── انیمیشن‌ها ── */
 @keyframes mifa-fade-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .mifa-fade-up {
   animation: mifa-fade-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -336,11 +367,11 @@
   animation: mifa-fade-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 .mifa-stagger > *:nth-child(1) { animation-delay: 0.02s; }
-.mifa-stagger > *:nth-child(2) { animation-delay: 0.07s; }
-.mifa-stagger > *:nth-child(3) { animation-delay: 0.12s; }
-.mifa-stagger > *:nth-child(4) { animation-delay: 0.17s; }
-.mifa-stagger > *:nth-child(5) { animation-delay: 0.22s; }
-.mifa-stagger > *:nth-child(6) { animation-delay: 0.27s; }
+.mifa-stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.mifa-stagger > *:nth-child(3) { animation-delay: 0.1s; }
+.mifa-stagger > *:nth-child(4) { animation-delay: 0.14s; }
+.mifa-stagger > *:nth-child(5) { animation-delay: 0.18s; }
+.mifa-stagger > *:nth-child(6) { animation-delay: 0.22s; }
 
 @keyframes mifa-pulse {
   0%, 100% { opacity: 0.5; }
@@ -350,10 +381,11 @@
   animation: mifa-pulse 2.4s ease-in-out infinite;
 }
 
-@keyframes mifa-slide-in {
-  from { opacity: 0; transform: translateY(16px) scale(0.99); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes mifa-pop {
+  0% { transform: scale(0.92); opacity: 0; }
+  60% { transform: scale(1.02); }
+  100% { transform: scale(1); opacity: 1; }
 }
-.mifa-slide-in {
-  animation: mifa-slide-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.mifa-pop {
+  animation: mifa-pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }

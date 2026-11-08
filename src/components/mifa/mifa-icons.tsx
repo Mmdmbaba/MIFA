@@ -1,7 +1,9 @@
 "use client"
 
-// آیکون‌های دسته‌بندی از برند کیت MIFA (خطی، ضخامت 1.7، viewBox 24×24)
+// آیکون‌های دسته‌بندی و خرج ثابت از برند کیت MIFA (خطی، ضخامت 1.7، viewBox 24×24)
 import { getCategory } from "@/lib/mifa/categories"
+import type { FixedKind } from "@/lib/mifa/types"
+import { Home, ReceiptText, Repeat, Landmark, Package, type LucideIcon } from "lucide-react"
 
 const ICON_PATHS: Record<string, string[]> = {
   groceries: ["M3.5 9h17l-1.6 10.5H5.1L3.5 9Z", "M7 9l3-5M17 9l-3-5M8 13v3M12 13v3M16 13v3"],
@@ -38,4 +40,19 @@ export function CategoryBadge({ id, size = "md" }: { id: string; size?: "sm" | "
       <CategoryIcon id={cat.id} className={size === "sm" ? "w-4 h-4" : "w-5 h-5"} />
     </div>
   )
+}
+
+// ─── آیکون انواع خرج ثابت ───
+
+export const FIXED_KIND_ICONS: Record<FixedKind, LucideIcon> = {
+  rent: Home,
+  bills: ReceiptText,
+  subscription: Repeat,
+  installment: Landmark,
+  other: Package,
+}
+
+export function FixedKindIcon({ kind, className }: { kind: FixedKind; className?: string }) {
+  const Icon = FIXED_KIND_ICONS[kind] ?? Package
+  return <Icon className={className} aria-hidden="true" />
 }

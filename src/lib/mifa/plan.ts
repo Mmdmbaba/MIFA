@@ -1,160 +1,50 @@
-// موتور برنامه MIFA — بیشترین پولی که تا آخر دوره می‌مونه
-// income − fixed − savings = پول آزاد خرج کردن؛ از اینجا به بعد همه‌چیز از همین محاسبه می‌شه
-import { daysInCycle, daysLeftInCycle, currentCycleKey } from "./cycle"
+// موتور برنامه MIFA — درآمد − خرج ثابت − پس‌انداز = پول آزادِ خرج کردن
+// از اینجا به بعد همه‌چیز از همین محاسبه می‌شود. مبالغ: عدد صحیح تومان.
+import type { Profile, SavingsMode } from "./types"
 
-export interface FixedItem {
-  id: string
-  label: string
-  amount: number
-  icon: string
-  sortOrder?: number
-}
-
-export interface PlanProfile {
-  name: string
-  income: number
-  payday: number
-  cycleStartDay: number // روز شروع دوره مالی در تقویم جلالی (۱-۳۱)
-  savingsMode: "auto" | "amount" | "percent" | "none"
-  savingsAmount: number
-  savingsPercent: number
-}
-
-export interface Plan {
+export interface PlanCore {
   income: number
   fixedTotal: number
+  disposable: number // درآمد − ثابت‌ها
   savings: number
-  flexible: number // پول آزاد ماه
   savingsLabel: string
+  spendable: number // disposable − savings = پول آزاد دوره
 }
 
-/** پیشنهاد هوشمند پس‌انداز: ~۲۰٪ مازاد درآمد روی خرج ثابت (بین ۰ تا ۳۰٪ درآمد) */
-export function autoSavings(income: number, fixedTotal: number): number {
-  const surplus = Math.max(0, income - fixedTotal)
-  const rec = Math.round(surplus * 0.2)
-  const cap = Math.round(income * 0.3)
-  return Math.min(rec, cap)
+/** پیشنهاد سیستم: ~۲۰٪ پول آزاد (بین ۰ و خودِ پول آزاد) */
+export function autoSavings(disposable: number): number {
+  const d = Math.max(0, disposable)
+  return Math.min(d, Math.round(d * 0.2))
 }
 
-/** جمع هزینه‌های ثابت */
-export function fixedTotalOf(fixed: { amount: number }[]): number {
-  return fixed.reduce((s, f) => s + f.amount, 0)
-}
-
-/** ساخت برنامه کامل — حالت auto اینجا با هزینه‌های ثابت واقعی حل می‌شه */
-export function buildPlan(profile: PlanProfile, fixed: FixedItem[]): Plan {
-  const fixedTotal = fixedTotalOf(fixed)
-  let savings: number
-  let savingsLabel: string
-  switch (profile.savingsMode) {
-    case "amount":
-      savings = Math.max(0, Math.round(profile.savingsAmount))
-      savingsLabel = "پس‌انداز با عدد مشخص"
-      break
-    case "percent":
-      savings = Math.max(0, Math.round((profile.income * profile.savingsPercent) / 100))
-      savingsLabel = `پس‌انداز ${profile.savingsPercent}٪ از درآمد`
-      break
+export function resolveSavings(
+  mode: SavingsMode,
+  manualAmount: number,
+  disposable: number
+): { savings: number; label: string } {
+  const d = Math.max(0, disposable)
+  switch (mode) {
+    case "manual":
+      return { savings: Math.min(d, Math.max(0, Math.round(manualAmount))), label: "پس‌انداز خودت" }
+    case "max":
+      return { savings: d, label: "حداکثر ممکن" }
     case "auto":
-      savings = autoSavings(profile.income, fixedTotal)
-      savingsLabel = "پس‌انداز پیشنهاد MIFA"
-      break
-    default:
-      savings = 0
-      savingsLabel = "فعلاً بدون پس‌انداز"
+      return { savings: autoSavings(d), label: "پیشنهاد MIFA" }
   }
-  const flexible = Math.max(0, profile.income - fixedTotal - savings)
-  return { income: profile.income, fixedTotal, savings, flexible, savingsLabel }
 }
 
-export type PlanStatusKind = "safe" | "watch" | "danger"
-
-export interface PlanStatus {
-  plan: Plan
-  spent: number // خرج آزاد تا امروز
-  remainingFlexible: number // پول آزاد باقی‌مانده
-  spentPct: number // درصد خرج از پول آزاد
-  dailyAllowance: number // سقف خرج امروز
-  kept: number // پولی که با این روال تا آخر ماه می‌مونه (شامل پس‌انداز)
-  projectedFlexibleLeft: number // پیش‌بینی آزادِ آخر ماه با سرعت فعلی
-  overFlexible: boolean // خرجت از پول آزاد رد شده؟
-  status: PlanStatusKind
-  statusText: string
-  dayNum: number // چندمین روز دوره
-  daysInPeriod: number // طول دوره
-  daysLeft: number
-  isCurrent: boolean
-  extraIncome: number // درآمد ثبت‌شده اضافه روی حقوق
-}
-
-/** وضعیت زنده برنامه برای یک دوره مالی */
-export function computePlanStatus(
-  profile: PlanProfile,
-  fixed: FixedItem[],
-  cycle: string,
-  stats: { totalExpense: number; totalIncome: number; dayNum: number }
-): PlanStatus {
-  const plan = buildPlan(profile, fixed)
-  const startDay = profile.cycleStartDay
-  const isCurrent = currentCycleKey(startDay) === cycle
-  const daysInPeriod = daysInCycle(cycle, startDay)
-  const daysLeft = isCurrent ? daysLeftInCycle(cycle, startDay) : daysInPeriod
-  const dayNum = isCurrent ? stats.dayNum : 0
-
-  const extraIncome = Math.max(0, stats.totalIncome)
-  // درآمدِ ماه = حقوق ثابت + درآمدهای ثبت‌شده (مثل کارهای جانبی)
-  const monthIncome = plan.income + extraIncome
-  const flexibleAll = Math.max(0, monthIncome - plan.fixedTotal - plan.savings)
-
-  const spent = stats.totalExpense
-  const remainingFlexible = flexibleAll - spent
-  const spentPct = flexibleAll > 0 ? (spent / flexibleAll) * 100 : spent > 0 ? 120 : 0
-  const overFlexible = remainingFlexible < 0
-
-  // سقف خرج امروز: پول آزاد باقی‌مانده تقسیم بر روزهای باقی‌مانده (شامل امروز)
-  const dailyAllowance = isCurrent
-    ? Math.max(0, Math.floor(Math.max(0, remainingFlexible) / Math.max(1, daysLeft)))
-    : Math.max(0, Math.floor(flexibleAll / Math.max(1, daysInPeriod)))
-
-  // پیش‌بینی با سرعت فعلی
-  const projectedSpend = isCurrent && dayNum > 0
-    ? Math.round((spent / dayNum) * daysInPeriod)
-    : spent
-  const projectedFlexibleLeft = flexibleAll - projectedSpend
-
-  // پولی که تا آخر ماه می‌مونه = پس‌انداز + مازاد آزاد (یا منفی اگر پس‌انداز خورده بشه)
-  const kept = plan.savings + projectedFlexibleLeft
-
-  let status: PlanStatusKind
-  let statusText: string
-  if (kept >= plan.savings && projectedFlexibleLeft >= 0) {
-    status = "safe"
-    statusText = projectedFlexibleLeft > 0
-      ? "با این روال آخر دوره پول اضافه‌ات می‌مونه"
-      : "دقیقاً طبق برنامه جلو می‌ری"
-  } else if (kept > 0 && projectedFlexibleLeft < 0) {
-    status = "watch"
-    statusText = "روال خرجت داره بخشی از پس‌انداز رو می‌خوره"
-  } else {
-    status = "danger"
-    statusText = "با این روال آخر دوره کسری می‌مونه — سقف روزانه رو جدی بگیر"
-  }
-
+/** هسته برنامه از پروفایل */
+export function computePlanCore(profile: Profile): PlanCore {
+  const income = Math.max(0, Math.round(profile.monthlyIncome))
+  const fixedTotal = profile.fixedExpenses.reduce((s, f) => s + Math.max(0, f.amount), 0)
+  const disposable = Math.max(0, income - fixedTotal)
+  const { savings, label } = resolveSavings(profile.savingsMode, profile.savingsAmount, disposable)
   return {
-    plan: { ...plan, income: monthIncome, flexible: flexibleAll },
-    spent,
-    remainingFlexible,
-    spentPct: Math.min(spentPct, 999),
-    dailyAllowance,
-    kept,
-    projectedFlexibleLeft,
-    overFlexible,
-    status,
-    statusText,
-    dayNum,
-    daysInPeriod,
-    daysLeft,
-    isCurrent,
-    extraIncome,
+    income,
+    fixedTotal,
+    disposable,
+    savings,
+    savingsLabel: label,
+    spendable: Math.max(0, disposable - savings),
   }
 }

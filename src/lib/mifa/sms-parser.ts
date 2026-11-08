@@ -134,13 +134,22 @@ export function parseSmsText(text: string): ParsedSms[] {
 
   const results: ParsedSms[] = []
   const seen = new Set<string>()
+  // پیامک‌های چندخطی: نوع از خطِ «سرصفحه» (واریز/برداشت/…) به خط مبلغ می‌چسبد
+  let typeHint: "income" | "expense" | null = null
 
   for (const line of lines) {
     const latin = toLatinDigits(line)
     const amounts = findAmounts(line).filter(isValidTransactionAmount)
+
+    const hasIncome = INCOME_KEYWORDS.some((k) => latin.includes(k))
+    const hasSpend = SPEND_KEYWORDS.some((k) => latin.includes(k))
+    if (hasIncome) typeHint = "income"
+    else if (hasSpend) typeHint = "expense"
+
     if (amounts.length === 0) continue
 
-    const isIncome = INCOME_KEYWORDS.some((k) => latin.includes(k))
+    const isIncome = hasIncome || (typeHint === "income" && !hasSpend)
+    typeHint = null // مصرف شد — تا پیامک بعدی
     const type: "expense" | "income" = isIncome ? "income" : "expense"
 
     const hasToman = /تومان/.test(latin)

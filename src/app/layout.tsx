@@ -6,15 +6,17 @@ import { QueryProvider } from "@/components/mifa/query-provider";
 
 export const metadata: Metadata = {
   title: "MIFA — پولت رو بشناس، بیشتر نگه دار",
-  description: "دستیار شخصی مدیریت مالی MIFA: برنامه هوشمند ماهانه، سقف خرج روزانه، کشف نشت پول و پیش‌بینی آخر ماه",
+  description:
+    "دستیار شخصی مدیریت مالی MIFA: برنامه هوشمند ماهانه با دوره دلخواه جلالی، سقف خرج روزانه، کشف نشت پول و پیش‌بینی آخر دوره",
+  manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.png",
+    icon: "/brand/ribbon-tile-32.png",
     apple: "/brand/ribbon-apple.png",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#141821",
+  themeColor: "#252A34",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

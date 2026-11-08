@@ -1,279 +1,178 @@
 "use client"
 
-// دیالوگ ثبت سریع MIFA — ثبت دستی ۱۰ ثانیه‌ای + ثبت گروهی از پیامک بانکی
+// ثبت سریع MIFA — شیت پایینی: مبلغ بزرگ، شبکه دسته‌بندی، ذخیره زیر ۱۰ ثانیه
+// فرم فقط وقتی شیت باز است mount می‌شود → هر بار با تمیزی کامل شروع می‌شود
 import { useMemo, useState } from "react"
-import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
-import { CATEGORIES, autoCategory } from "@/lib/mifa/categories"
-import { parseAmountInput, formatAmount, toPersianDigits } from "@/lib/mifa/format"
-import { parseSmsText, type ParsedSms } from "@/lib/mifa/sms-parser"
+import { AmountInput } from "./amount-input"
 import { CategoryIcon } from "./mifa-icons"
 import { useAddTransactions } from "./mifa-hooks"
-import { Sparkles, MessageSquareText, Keyboard, Trash2 } from "lucide-react"
+import { CATEGORIES } from "@/lib/mifa/categories"
+import { formatAmount, parseAmountInput } from "@/lib/mifa/format"
+import { fullJalaliDate } from "@/lib/mifa/jalali"
+import { useToast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
+import { Check, TrendingDown, TrendingUp } from "lucide-react"
 
-interface QuickAddDialogProps {
+export function QuickAddDialog({
+  open,
+  onOpenChange,
+  defaultCategory = null,
+}: {
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (v: boolean) => void
+  defaultCategory?: string | null
+}) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="bg-card border-border rounded-t-[28px] px-5 pt-4 pb-[max(env(safe-area-inset-bottom),1rem)] max-w-lg mx-auto inset-x-0 w-full max-h-[92dvh] overflow-y-auto scroll-slim"
+      >
+        {open && <QuickAddForm defaultCategory={defaultCategory} onDone={() => onOpenChange(false)} />}
+      </SheetContent>
+    </Sheet>
+  )
 }
 
-export function QuickAddDialog({ open, onOpenChange }: QuickAddDialogProps) {
-  const { toast } = useToast()
-  const addTx = useAddTransactions()
-
-  // حالت ثبت دستی
+function QuickAddForm({ defaultCategory, onDone }: { defaultCategory: string | null; onDone: () => void }) {
   const [type, setType] = useState<"expense" | "income">("expense")
   const [amount, setAmount] = useState("")
-  const [note, setNote] = useState("")
-  const [category, setCategory] = useState("groceries")
-  const [yesterday, setYesterday] = useState(false)
+  const [category, setCategory] = useState<string>(defaultCategory ?? "groceries")
+  const [title, setTitle] = useState("")
+  const add = useAddTransactions()
+  const { toast } = useToast()
 
-  // حالت پیامک
-  const [smsText, setSmsText] = useState("")
-  const [parsed, setParsed] = useState<ParsedSms[] | null>(null)
-  const [selected, setSelected] = useState<Set<number>>(new Set())
+  const amountNum = parseAmountInput(amount) ?? 0
+  const canSave = amountNum > 0
 
-  const suggested = useMemo(() => (note.trim() ? autoCategory(note) : null), [note])
-  const amountNum = parseAmountInput(amount)
+  const visibleCategories = useMemo(
+    () => (type === "income" ? CATEGORIES.filter((c) => c.id === "savings") : CATEGORIES),
+    [type]
+  )
 
-  const resetManual = () => {
-    setAmount(""); setNote(""); setCategory("groceries"); setType("expense"); setYesterday(false)
-  }
-
-  const submitManual = () => {
-    if (!amountNum) {
-      toast({ title: "مبلغ رو بنویس", variant: "destructive" })
-      return
-    }
-    const d = new Date()
-    if (yesterday) d.setDate(d.getDate() - 1)
-    addTx.mutate(
-      [{ type, amount: amountNum, title: note.trim() || null, category, date: d.toISOString() }],
+  const save = () => {
+    if (!canSave) return
+    add.mutate(
+      [
+        {
+          type,
+          amount: amountNum,
+          title: title.trim() || null,
+          category: type === "income" ? "savings" : category,
+          date: new Date().toISOString(),
+          source: "manual",
+        },
+      ],
       {
         onSuccess: () => {
-          toast({ title: type === "expense" ? "خرج ثبت شد ✓" : "درآمد ثبت شد ✓",
-            description: `${formatAmount(amountNum)} تومان` })
-          resetManual()
-          onOpenChange(false)
+          toast({
+            title: type === "expense" ? "خرجت ثبت شد ✓" : "درآمدت ثبت شد ✓",
+            description: `${formatAmount(amountNum)} تومان`,
+          })
+          onDone()
         },
-        onError: (e) => toast({ title: e.message, variant: "destructive" }),
+        onError: () => toast({ title: "ثبت نشد — دوباره تلاش کن", variant: "destructive" }),
       }
     )
   }
 
-  const runParse = () => {
-    const results = parseSmsText(smsText)
-    if (results.length === 0) {
-      toast({ title: "تراکنشی پیدا نکردم",
-        description: "پیامک‌های خرج کارت، برداشت یا واریز رو بچسبون" })
-      setParsed(null)
-      return
-    }
-    setParsed(results)
-    setSelected(new Set(results.map((_, i) => i)))
-    toast({ title: `${toPersianDigits(results.length)} تراکنش پیدا شد`, description: "بعد از چک کردن، ثبت کن" })
-  }
-
-  const submitSms = () => {
-    if (!parsed) return
-    const items = parsed
-      .filter((_, i) => selected.has(i))
-      .map((p) => ({ type: p.type, amount: p.amount, title: p.title, category: p.category, date: p.date, source: "sms" }))
-    if (items.length === 0) {
-      toast({ title: "حداقل یک تراکنش انتخاب کن", variant: "destructive" })
-      return
-    }
-    addTx.mutate(items, {
-      onSuccess: () => {
-        toast({ title: `${toPersianDigits(items.length)} تراکنش ثبت شد ✓` })
-        setSmsText(""); setParsed(null); setSelected(new Set())
-        onOpenChange(false)
-      },
-      onError: (e) => toast({ title: e.message, variant: "destructive" }),
-    })
-  }
-
-  const changeParsedCategory = (idx: number, cat: string) => {
-    setParsed((prev) => prev ? prev.map((p, i) => (i === idx ? { ...p, category: cat } : p)) : prev)
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[92vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="mifa-h3">ثبت سریع</DialogTitle>
-          <DialogDescription>مبلغ و دسته رو بزن — یا پیامک‌های بانک رو بچسبون</DialogDescription>
-        </DialogHeader>
+    <>
+      <div className="mx-auto w-10 h-1.5 rounded-full bg-muted-foreground/30 mb-4" aria-hidden="true" />
+      <SheetTitle className="sr-only">ثبت سریع تراکنش</SheetTitle>
 
-        <Tabs defaultValue="manual">
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="manual" className="gap-1.5"><Keyboard className="w-4 h-4" /> دستی</TabsTrigger>
-            <TabsTrigger value="sms" className="gap-1.5"><MessageSquareText className="w-4 h-4" /> از پیامک بانک</TabsTrigger>
-          </TabsList>
+      {/* نوع تراکنش */}
+      <div className="grid grid-cols-2 gap-2 mb-4" role="tablist" aria-label="نوع تراکنش">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={type === "expense"}
+          onClick={() => { setType("expense"); if (!CATEGORIES.some((c) => c.id === category)) setCategory("groceries") }}
+          className={cn(
+            "h-12 rounded-2xl border font-bold text-body-sm flex items-center justify-center gap-2 transition-colors",
+            type === "expense" ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground"
+          )}
+        >
+          <TrendingDown className="w-4.5 h-4.5" />
+          خرج
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={type === "income"}
+          onClick={() => setType("income")}
+          className={cn(
+            "h-12 rounded-2xl border font-bold text-body-sm flex items-center justify-center gap-2 transition-colors",
+            type === "income" ? "border-mifa-success bg-mifa-success/15 text-mifa-success" : "border-border text-muted-foreground"
+          )}
+        >
+          <TrendingUp className="w-4.5 h-4.5" />
+          درآمد
+        </button>
+      </div>
 
-          {/* ── ثبت دستی ── */}
-          <TabsContent value="manual" className="space-y-4 pt-2">
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant={type === "expense" ? "default" : "outline"}
-                onClick={() => setType("expense")}
-                className={type === "expense" ? "bg-primary text-primary-foreground font-bold" : ""}>
-                خرج
-              </Button>
-              <Button variant={type === "income" ? "default" : "outline"}
-                onClick={() => setType("income")}
-                className={type === "income" ? "bg-[#2BD38B] text-white font-bold hover:bg-[#2BD38B]/90" : ""}>
-                درآمد
-              </Button>
-            </div>
+      {/* مبلغ */}
+      <div className="relative mb-1.5">
+        <AmountInput value={amount} onChange={setAmount} autoFocus ariaLabel="مبلغ به تومان" onEnter={save} />
+      </div>
+      <p className="text-center text-caption text-muted-foreground mb-4">
+        تومان · {fullJalaliDate(new Date())}
+      </p>
 
-            <div>
-              <Input
-                inputMode="numeric"
-                placeholder="مبلغ به تومان — مثلاً ۱۲۰٬۰۰۰"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="numeric h-14 text-2xl font-bold text-center"
-                aria-label="مبلغ به تومان"
-                onKeyDown={(e) => e.key === "Enter" && submitManual()}
-              />
-              {amountNum ? (
-                <p className="text-center text-caption text-muted-foreground mt-1.5">{formatAmount(amountNum)} تومان</p>
-              ) : null}
-            </div>
+      {/* دسته‌بندی‌ها */}
+      {type === "expense" && (
+        <div className="grid grid-cols-5 gap-2 mb-4" role="radiogroup" aria-label="دسته‌بندی">
+          {visibleCategories.map((c) => {
+            const active = category === c.id
+            return (
+              <button
+                key={c.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setCategory(c.id)}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-xl border py-2 px-1 transition-all",
+                  active ? "border-primary bg-primary/10" : "border-border/70 hover:border-primary/40"
+                )}
+              >
+                <span
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: `${c.color}1f`, color: c.color }}
+                >
+                  <CategoryIcon id={c.id} className="w-4.5 h-4.5" />
+                </span>
+                <span className={cn("text-[10px] font-bold leading-none", active ? "text-primary" : "text-muted-foreground")}>
+                  {c.name}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
 
-            <div>
-              <Label className="text-caption text-muted-foreground">دسته</Label>
-              <div className="grid grid-cols-5 gap-1.5 mt-2">
-                {CATEGORIES.map((c) => (
-                  <button key={c.id} type="button"
-                    onClick={() => setCategory(c.id)}
-                    aria-pressed={category === c.id}
-                    className={`flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 border transition-colors ${
-                      category === c.id
-                        ? "border-primary bg-accent text-accent-foreground"
-                        : "border-border text-muted-foreground hover:border-primary/40"
-                    }`}>
-                    <CategoryIcon id={c.id} className="w-5 h-5" />
-                    <span className="text-[10px] leading-none font-medium">{c.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+      {/* یادداشت */}
+      <Input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="یادداشت (اختیاری) — مثلاً نان و شیر"
+        className="h-12 bg-background/60 border-input text-foreground mb-4"
+        aria-label="یادداشت"
+        onKeyDown={(e) => e.key === "Enter" && save()}
+      />
 
-            <div>
-              <Input placeholder="یادداشت — مثلاً خرید سوپر (اختیاری)" value={note}
-                onChange={(e) => setNote(e.target.value)}
-                aria-label="یادداشت" />
-              {suggested && suggested !== category ? (
-                <button type="button"
-                  onClick={() => setCategory(suggested)}
-                  className="mt-2 inline-flex items-center gap-1 text-caption text-[#08D9D6] hover:underline">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  پیشنهاد هوشمند: دسته «{CATEGORIES.find((c) => c.id === suggested)?.name}»
-                </button>
-              ) : null}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-body-sm cursor-pointer">
-                <Checkbox checked={yesterday} onCheckedChange={(v) => setYesterday(v === true)} />
-                مال دیروزه
-              </label>
-              <Button onClick={submitManual} disabled={addTx.isPending}
-                className="bg-primary text-primary-foreground font-bold px-8 hover:bg-primary/90">
-                {addTx.isPending ? "..." : "ثبت"}
-              </Button>
-            </div>
-          </TabsContent>
-
-          {/* ── ثبت از پیامک بانکی ── */}
-          <TabsContent value="sms" className="space-y-4 pt-2">
-            {!parsed ? (
-              <>
-                <Textarea
-                  placeholder={`متن پیامک‌های بانک رو اینجا بچسبون — مثلاً:\nخرج کارت: مبلغ 1,500,000 ریال خرید از سوپر\nواریز: مبلغ 20,000,000 ریال`}
-                  value={smsText}
-                  onChange={(e) => setSmsText(e.target.value)}
-                  rows={7}
-                  className="text-body-sm leading-6"
-                  aria-label="متن پیامک بانکی"
-                />
-                <p className="text-caption text-muted-foreground">
-                  چند پیامک رو یکجا هم می‌تونی بچسبونی — ریال خودکار به تومان تبدیل می‌شه
-                </p>
-                <Button onClick={runParse} disabled={!smsText.trim()}
-                  className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90">
-                  پیدا کردن تراکنش‌ها
-                </Button>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center justify-between">
-                  <Label>تراکنش‌های پیدا‌شده</Label>
-                  <button type="button"
-                    onClick={() => setParsed(null)}
-                    className="text-caption text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-                    <Trash2 className="w-3.5 h-3.5" /> از اول
-                  </button>
-                </div>
-                <div className="space-y-2 max-h-72 overflow-y-auto pl-1">
-                  {parsed.map((p, i) => (
-                    <div key={i}
-                      className={`rounded-xl border p-3 flex items-start gap-3 min-w-0 ${
-                        selected.has(i) ? "border-primary/50 bg-accent/40" : "border-border opacity-60"
-                      }`}>
-                      <Checkbox
-                        checked={selected.has(i)}
-                        onCheckedChange={(v) => {
-                          const next = new Set(selected)
-                          if (v === true) next.add(i); else next.delete(i)
-                          setSelected(next)
-                        }}
-                        className="mt-1"
-                        aria-label={`انتخاب تراکنش ${i + 1}`}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className={`font-bold numeric text-body ${p.type === "income" ? "text-[#2BD38B]" : "text-foreground"}`}>
-                            {p.type === "income" ? "+" : "−"}{formatAmount(p.amount)} تومان
-                          </span>
-                          <span className="text-[10px] text-muted-foreground shrink-0">
-                            {p.type === "income" ? "درآمد" : "خرج"}
-                          </span>
-                        </div>
-                        {p.title ? (
-                          <p className="text-caption text-muted-foreground mt-0.5 leading-5" title={p.raw}>{p.title}</p>
-                        ) : null}
-                        <select
-                          value={p.category}
-                          onChange={(e) => changeParsedCategory(i, e.target.value)}
-                          className="mt-1.5 w-full max-w-44 text-[11px] bg-transparent border border-border rounded-md px-1.5 py-0.5 text-muted-foreground truncate"
-                          aria-label="دسته تراکنش"
-                        >
-                          {CATEGORIES.map((c) => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <Button onClick={submitSms} disabled={addTx.isPending || selected.size === 0}
-                  className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90">
-                  ثبت {selected.size > 0 ? `${toPersianDigits(selected.size)} تراکنش` : ""}
-                </Button>
-              </>
-            )}
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+      <Button
+        size="lg"
+        className="w-full h-14 rounded-2xl text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+        disabled={!canSave || add.isPending}
+        onClick={save}
+      >
+        <Check className="w-5 h-5 -ms-1" />
+        {add.isPending ? "داریم ثبت می‌کنیم…" : "ثبت"}
+      </Button>
+    </>
   )
 }
