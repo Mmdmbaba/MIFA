@@ -2,6 +2,7 @@
   // MIFA — Cloudflare Worker با استاتیک اَسِت (رایگان و نامحدود برای فایل‌های استاتیک)
   // دیتابیس D1 (mifa-db) برای نسخه بعد (sync ابری) به همین فایل اضافه می‌شود
   "name": "mifa",
+  "account_id": "0014c621d5ac6bdb2ba5106e57caf3c3",
   "compatibility_date": "2026-11-01",
   "assets": {
     "directory": "./out",

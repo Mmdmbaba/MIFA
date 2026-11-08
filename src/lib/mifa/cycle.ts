@@ -222,12 +222,18 @@ export function shiftCycleKey(key: string, delta: number, ctx: PlanCtx): string 
 
 /**
  * طول دورهٔ «نامزد» کامل — برای کسری کردن بودجهٔ دورۀ اولِ ناقص.
- * برای دورۀ اول = طول دورۀ بعدی (استاندارد)؛ برای بقیه = طول خود دوره.
+ * برای دورۀ اول فقط وقتی «ناقص» است (شروع وسط ماه، رفتار قدیمی) مبنای کسری
+ * طول دورۀ استانداردِ همان ماهِ شروع است؛ دورۀ اولِ کامل (مثلاً شروع از ۱ آذر
+ * یا ۱ اسفند) دقیقاً به طول خودش حساب می‌شود — وگرنه اختلاف طول ماه‌ها
+ * (مثلاً اسفند ۲۹ روز در برابر فروردین ۳۱ روز) یک کسری وهمیِ ~۶٪ در بودجه،
+ * سقف روزانه و «پس‌انداز این دوره» ایجاد می‌کرد و عددی بی‌ربط نشان می‌داد.
+ * برای بقیه دوره‌ها = طول خود دوره.
  */
 export function nominalCycleDays(key: string, ctx: PlanCtx): number {
-  if (isFirstCycle(key, ctx)) {
-    const next = shiftCycleKey(key, 1, ctx)
-    if (next) return daysInCycle(next, ctx)
+  if (isFirstCycle(key, ctx) && !firstCycleIsFull(ctx)) {
+    const fs = parseCycleKey(key)
+    const stdKey = cycleKeyOfJalali({ jy: fs.jy, jm: fs.jm, jd: clampDay(fs.jy, fs.jm, ctx.startDay) })
+    return daysInCycle(stdKey, ctx)
   }
   return daysInCycle(key, ctx)
 }
