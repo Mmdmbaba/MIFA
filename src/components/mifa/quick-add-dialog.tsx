@@ -22,7 +22,6 @@ import { Sparkles, MessageSquareText, Keyboard, Trash2 } from "lucide-react"
 interface QuickAddDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  month: string
 }
 
 export function QuickAddDialog({ open, onOpenChange }: QuickAddDialogProps) {

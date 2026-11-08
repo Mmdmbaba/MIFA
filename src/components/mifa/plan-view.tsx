@@ -28,7 +28,7 @@ export function PlanView({ cycle, startDay }: PlanViewProps) {
     const p = profile.data?.profile
     if (!p) return null
     return buildPlan(
-      { name: p.name, income: p.income, payday: p.payday, savingsMode: p.savingsMode as never, savingsAmount: p.savingsAmount, savingsPercent: p.savingsPercent },
+      { name: p.name, income: p.income, payday: p.payday, cycleStartDay: p.cycleStartDay, savingsMode: p.savingsMode as never, savingsAmount: p.savingsAmount, savingsPercent: p.savingsPercent },
       profile.data?.fixed ?? []
     )
   }, [profile.data])

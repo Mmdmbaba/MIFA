@@ -1,7 +1,7 @@
 "use client"
 
 // پوسته اصلی MIFA v2 — گیت onboarding، هدر، داک شناور و ناوبری (بر پایه دوره مالی)
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { RibbonMark, MifaWordmark } from "./mifa-logo"
 import { OnboardingWizard } from "./onboarding"
 import { DashboardView } from "./dashboard-view"
@@ -38,10 +38,12 @@ export function MifaApp() {
   const startDay = profile.data?.profile?.cycleStartDay ?? 1
   const cycle = cycleOverride ?? currentCycleKey(startDay)
 
-  // با تغییر روز شروع دوره، برگرد به دوره جاری
-  useEffect(() => {
+  // با تغییر روز شروع دوره، برگرد به دوره جاری (الگوی ریست حین رندر)
+  const [prevStartDay, setPrevStartDay] = useState(startDay)
+  if (prevStartDay !== startDay) {
+    setPrevStartDay(startDay)
     setCycleOverride(null)
-  }, [startDay])
+  }
 
   // ── لودینگ اولیه ──
   if (profile.isLoading) {
@@ -108,10 +110,17 @@ export function MifaApp() {
             </div>
           )}
 
-          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"
-            onClick={() => setTab("settings")} aria-label="تنظیمات">
-            <Settings className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"
+              onClick={toggleTheme} aria-label="تغییر تم">
+              <Sun className="w-5 h-5 hidden dark:block" />
+              <Moon className="w-5 h-5 dark:hidden" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl"
+              onClick={() => setTab("settings")} aria-label="تنظیمات">
+              <Settings className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -121,7 +130,7 @@ export function MifaApp() {
         {tab === "transactions" && <TransactionsView cycle={cycle} startDay={startDay} />}
         {tab === "plan" && <PlanView cycle={cycle} startDay={startDay} />}
         {tab === "insights" && <InsightsView cycle={cycle} startDay={startDay} />}
-        {tab === "settings" && <SettingsView onGoBack={() => setTab("dashboard")} />}
+        {tab === "settings" && <SettingsView />}
       </main>
 
       {/* ── دیالوگ ثبت ── */}
@@ -151,14 +160,6 @@ export function MifaApp() {
         </div>
       </nav>
 
-      {/* دکمه تم شناور بالا-چپ برای دسترسی سریع */}
-      <button
-        onClick={toggleTheme}
-        className="fixed z-40 bottom-8 start-5 h-11 w-11 rounded-2xl glass flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-        aria-label="تغییر تم">
-        <Sun className="w-5 h-5 hidden dark:block" />
-        <Moon className="w-5 h-5 dark:hidden" />
-      </button>
     </div>
   )
 }

@@ -13,19 +13,20 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useTheme } from "next-themes"
 import { RibbonMark } from "./mifa-logo"
-import { useImportData, useClearAll, useResetProfile } from "./mifa-hooks"
-import { Download, Upload, Sun, Moon, Info, ShieldCheck, RotateCcw } from "lucide-react"
+import { OnboardingWizard } from "./onboarding"
+import { useImportData, useClearAll } from "./mifa-hooks"
+import { Download, Upload, Sun, Moon, Info, ShieldCheck, NotebookPen } from "lucide-react"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
-export function SettingsView({ onGoBack }: { onGoBack?: () => void }) {
+export function SettingsView() {
   const { theme, setTheme } = useTheme()
   const { toast } = useToast()
   const importData = useImportData()
   const clearAll = useClearAll()
-  const resetProfile = useResetProfile()
   const fileRef = useRef<HTMLInputElement>(null)
   const [confirmClear, setConfirmClear] = useState(false)
   const [confirmImport, setConfirmImport] = useState<Record<string, unknown> | null>(null)
-  const [confirmReset, setConfirmReset] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
 
   const exportJson = async () => {
     try {
@@ -77,10 +78,10 @@ export function SettingsView({ onGoBack }: { onGoBack?: () => void }) {
           <CardTitle className="mifa-h4">برنامه ماهانه</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" onClick={() => setConfirmReset(true)}
+          <Button variant="outline" onClick={() => setEditOpen(true)}
             className="w-full h-11 justify-start gap-2.5">
-            <RotateCcw className="w-4 h-4 text-primary" />
-            اجرای مجدد سوالات شروع
+            <NotebookPen className="w-4 h-4 text-primary" />
+            ویرایش درآمد، خرج ثابت، پس‌انداز و شروع دوره
           </Button>
         </CardContent>
       </Card>
@@ -151,32 +152,13 @@ export function SettingsView({ onGoBack }: { onGoBack?: () => void }) {
         </CardContent>
       </Card>
 
-      {/* تایید اجرای مجدد onboarding */}
-      <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>برنامه از نو تنظیم بشه؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              درآمد، خرج‌های ثابت و هدف پس‌اندازت دوباره ازت پرسیده می‌شه. تراکنش‌های ثبت‌شده حذف نمی‌شن.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel>بی‌خیال</AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-              resetProfile.mutate(undefined, {
-                onSuccess: () => {
-                  toast({ title: "برنامه پاک شد — دوباره شروع می‌کنیم" })
-                  onGoBack?.()
-                },
-                onError: (e) => toast({ title: e.message, variant: "destructive" }),
-                onSettled: () => setConfirmReset(false),
-              })
-            }} className="bg-primary text-primary-foreground hover:bg-primary/90">
-              بله، از نو
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* ویرایش برنامه — بدون پاک شدن داده‌ها، با مقادیر فعلی */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[94vh] overflow-y-auto">
+          <DialogTitle className="sr-only">ویرایش برنامه</DialogTitle>
+          <OnboardingWizard editMode onDone={() => setEditOpen(false)} />
+        </DialogContent>
+      </Dialog>
 
       {/* تایید پاک‌سازی */}
       <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>

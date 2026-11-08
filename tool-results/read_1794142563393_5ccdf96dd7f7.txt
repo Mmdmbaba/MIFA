@@ -1,0 +1,736 @@
+     1→"use client"
+     2→
+     3→// جادوگر شروع MIFA — اولین ورود: درآمد، خرج ثابت، هدف پس‌انداز و برنامه نهایی
+     4→// در حالت edit همان مسیر برای ویرایش برنامه استفاده می‌شود
+     5→import { useMemo, useState } from "react"
+     6→import { Button } from "@/components/ui/button"
+     7→import { Input } from "@/components/ui/input"
+     8→import { Label } from "@/components/ui/label"
+     9→import { Slider } from "@/components/ui/slider"
+    10→import { Skeleton } from "@/components/ui/skeleton"
+    11→import { RibbonMark, RibbonTile } from "./mifa-logo"
+    12→import { CategoryIcon } from "./mifa-icons"
+    13→import { useProfile, useSaveProfile, type ProfileData } from "./mifa-hooks"
+    14→import { autoSavings, buildPlan, fixedTotalOf, type FixedItem } from "@/lib/mifa/plan"
+    15→import { formatAmount, formatCompact, parseAmountInput, toPersianDigits } from "@/lib/mifa/format"
+    16→import { currentMonthKey, todayJalali, shiftMonth, JALALI_MONTHS } from "@/lib/mifa/jalali"
+    17→import { currentCycleKey, cycleLabel, daysInCycle, daysLeftInCycle } from "@/lib/mifa/cycle"
+    18→import { MifaCalendar } from "./mifa-calendar"
+    19→import { useToast } from "@/hooks/use-toast"
+    20→import {
+    21→  ArrowRight, ArrowLeft, Wallet, Home, PiggyBank, Sparkles,
+    22→  Landmark, TrendingUp, AlertTriangle, Check, Plus, X, Wand2, Coins, CalendarDays,
+    23→} from "lucide-react"
+    24→
+    25→type SavingsMode = "auto" | "amount" | "percent" | "none"
+    26→
+    27→const PRESETS: { label: string; icon: string; hint?: string }[] = [
+    28→  { label: "اجاره یا رهن", icon: "home" },
+    29→  { label: "قسط وام", icon: "bills" },
+    30→  { label: "قبض برق", icon: "bills" },
+    31→  { label: "قبض گاز", icon: "bills" },
+    32→  { label: "قبض آب", icon: "bills" },
+    33→  { label: "اینترنت و موبایل", icon: "bills" },
+    34→  { label: "اشتراک‌ها", icon: "entertainment" },
+    35→  { label: "بیمه", icon: "bills" },
+    36→  { label: "کمک به خانواده", icon: "gifts" },
+    37→  { label: "قسط خرید", icon: "savings" },
+    38→]
+    39→
+    40→const INCOME_QUICK = [5_000_000, 8_000_000, 12_000_000, 20_000_000, 30_000_000]
+    41→
+    42→interface WizardState {
+    43→  step: number
+    44→  name: string
+    45→  income: string
+    46→  payday: number
+    47→  cycleStartDay: number
+    48→  calMonth: string
+    49→  calOpen: boolean
+    50→  fixed: { label: string; amount: string; icon: string }[]
+    51→  customLabel: string
+    52→  customAmount: string
+    53→  savingsMode: SavingsMode
+    54→  savingsAmount: string
+    55→  savingsPercent: number
+    56→}
+    57→
+    58→function initialState(data?: ProfileData): WizardState {
+    59→  const p = data?.profile
+    60→  return {
+    61→    step: 0,
+    62→    name: p?.name ?? "",
+    63→    income: p ? String(p.income) : "",
+    64→    payday: p?.payday ?? 1,
+    65→    cycleStartDay: p?.cycleStartDay ?? 1,
+    66→    calMonth: currentMonthKey(),
+    67→    calOpen: false,
+    68→    fixed: (data?.fixed ?? []).map((f) => ({ label: f.label, amount: String(f.amount), icon: f.icon })),
+    69→    customLabel: "",
+    70→    customAmount: "",
+    71→    savingsMode: (p?.savingsMode as SavingsMode) ?? "auto",
+    72→    savingsAmount: p?.savingsMode === "amount" ? String(p.savingsAmount) : "",
+    73→    savingsPercent: p?.savingsPercent ?? 20,
+    74→  }
+    75→}
+    76→
+    77→export function OnboardingWizard({ onDone, editMode = false }: { onDone?: () => void; editMode?: boolean }) {
+    78→  const profileQuery = useProfile()
+    79→  const save = useSaveProfile()
+    80→  const { toast } = useToast()
+    81→  const [state, setState] = useState<WizardState | null>(null)
+    82→  const [initialized, setInitialized] = useState(false)
+    83→
+    84→  // مقداردهی اولیه بعد از لود پروفایل
+    85→  if (!initialized && profileQuery.data) {
+    86→    setInitialized(true)
+    87→    setState(initialState(profileQuery.data))
+    88→  }
+    89→
+    90→  if (!profileQuery.data || !state) {
+    91→    return (
+    92→      <div className="space-y-4 py-6">
+    93→        <Skeleton className="h-40 rounded-2xl" />
+    94→        <Skeleton className="h-56 rounded-2xl" />
+    95→      </div>
+    96→    )
+    97→  }
+    98→
+    99→  const s = state
+   100→  const set = (patch: Partial<WizardState>) => setState({ ...state, ...patch })
+   101→
+   102→  const incomeNum = parseAmountInput(s.income) ?? 0
+   103→  const fixedParsed: FixedItem[] = s.fixed.map((f, i) => ({
+   104→    id: `f${i}`,
+   105→    label: f.label,
+   106→    amount: parseAmountInput(f.amount) ?? 0,
+   107→    icon: f.icon,
+   108→  })).filter((f) => f.amount > 0)
+   109→  const fixedTotal = fixedTotalOf(fixedParsed)
+   110→  const savingsAmountNum = parseAmountInput(s.savingsAmount) ?? 0
+   111→  const autoRec = incomeNum > 0 ? autoSavings(incomeNum, fixedTotal) : 0
+   112→  const plan = buildPlan(
+   113→    {
+   114→      name: s.name,
+   115→      income: incomeNum,
+   116→      payday: s.payday,
+   117→      cycleStartDay: s.cycleStartDay,
+   118→      savingsMode: s.savingsMode,
+   119→      savingsAmount: savingsAmountNum,
+   120→      savingsPercent: s.savingsPercent,
+   121→    },
+   122→    fixedParsed
+   123→  )
+   124→  const firstCycleKey = currentCycleKey(s.cycleStartDay)
+   125→  const firstCycleDays = daysInCycle(firstCycleKey, s.cycleStartDay)
+   126→  const firstDaysLeft = Math.max(1, daysLeftInCycle(firstCycleKey, s.cycleStartDay))
+   127→  const dailyAtStart = Math.floor(plan.flexible / firstDaysLeft)
+   128→
+   129→  const STEPS = editMode
+   130→    ? ["شخصی", "درآمد", "شروع دوره", "خرج ثابت", "پس‌انداز", "برنامه"]
+   131→    : ["خوش اومدی", "درآمد", "شروع دوره", "خرج ثابت", "پس‌انداز", "برنامه‌ات"]
+   132→
+   133→  const canNext = (() => {
+   134→    switch (s.step) {
+   135→      case 0: return s.name.trim().length > 0
+   136→      case 1: return incomeNum > 0
+   137→      default: return true
+   138→    }
+   139→  })()
+   140→
+   141→  const go = (delta: number) => set({ step: Math.min(5, Math.max(0, s.step + delta)) })
+   142→
+   143→  const addFixed = (label: string, icon: string, amount: string) => {
+   144→    const v = parseAmountInput(amount)
+   145→    if (!label.trim() || !v) {
+   146→      toast({ title: "عنوان و مبلغ رو کامل کن", variant: "destructive" })
+   147→      return
+   148→    }
+   149→    if (s.fixed.some((f) => f.label === label.trim())) {
+   150→      toast({ title: "این خرج ثابت قبلاً اضافه شده", variant: "destructive" })
+   151→      return
+   152→    }
+   153→    set({ fixed: [...s.fixed, { label: label.trim(), amount, icon }], customLabel: "", customAmount: "" })
+   154→  }
+   155→
+   156→  const removeFixed = (label: string) => set({ fixed: s.fixed.filter((f) => f.label !== label) })
+   157→
+   158→  const submit = () => {
+   159→    if (!canNext) return
+   160→    save.mutate(
+   161→      {
+   162→        name: s.name.trim(),
+   163→        income: incomeNum,
+   164→        payday: s.payday,
+   165→        cycleStartDay: s.cycleStartDay,
+   166→        savingsMode: s.savingsMode,
+   167→        savingsAmount: savingsAmountNum,
+   168→        savingsPercent: s.savingsPercent,
+   169→        fixed: fixedParsed.map((f) => ({ label: f.label, amount: f.amount, icon: f.icon })),
+   170→      },
+   171→      {
+   172→        onSuccess: () => {
+   173→          toast({ title: editMode ? "برنامه به‌روز شد ✓" : "برنامه‌ات ساخته شد ✓", description: "حالا هر خرجی که ثبت کنی، MIFA حساب می‌کنه چقدر برات می‌مونه" })
+   174→          onDone?.()
+   175→        },
+   176→        onError: (e) => toast({ title: e.message, variant: "destructive" }),
+   177→      }
+   178→    )
+   179→  }
+   180→
+   181→  const togglePreset = (preset: { label: string; icon: string }) => {
+   182→    if (s.fixed.some((f) => f.label === preset.label)) removeFixed(preset.label)
+   183→    else set({ fixed: [...s.fixed, { label: preset.label, amount: "", icon: preset.icon }] })
+   184→  }
+   185→
+   186→  return (
+   187→    <div className="relative z-10 flex flex-col min-h-full">
+   188→      {/* ── نوار پیشرفت ── */}
+   189→      <div className="flex items-center gap-3 px-1">
+   190→        <div className="flex items-center gap-1.5 flex-1">
+   191→          {STEPS.map((label, i) => (
+   192→            <div key={label} className="flex-1 h-1.5 rounded-full overflow-hidden bg-muted">
+   193→              <div
+   194→                className={`h-full rounded-full transition-all duration-500 ${i <= s.step ? "bg-primary" : "bg-transparent"}`}
+   195→                style={{ width: i <= s.step ? "100%" : "0%" }}
+   196→              />
+   197→            </div>
+   198→          ))}
+   199→        </div>
+   200→        <span className="text-caption text-muted-foreground numeric shrink-0">
+   201→          {toPersianDigits(s.step + 1)}/{toPersianDigits(STEPS.length)}
+   202→        </span>
+   203→      </div>
+   204→
+   205→      {/* ── محتوای مرحله ── */}
+   206→      <div className="flex-1 flex flex-col justify-center py-8 mifa-slide-in" key={s.step}>
+   207→        {/* مرحله ۰ — خوش آمد */}
+   208→        {s.step === 0 && (
+   209→          <div className="space-y-8 text-center">
+   210→            <RibbonTile size={editMode ? 88 : 128} className="mx-auto drop-shadow-2xl" />
+   211→            <div>
+   212→              <h1 className="mifa-h2 text-foreground">
+   213→                {editMode ? "برنامه‌ات رو به‌روز کن" : "سلام! من MIFA هستم"}
+   214→              </h1>
+   215→              <p className="mifa-body text-muted-foreground mt-3 max-w-sm mx-auto">
+   216→                {editMode
+   217→                  ? "همون چند سوال ساده رو دوباره جواب بده تا برنامه ماه بر اساس شرایط جدیدت ساخته شه."
+   218→                  : "برای اینکه بدونی چقدر می‌تونی خرج کنی و چقدر آخر ماه برات می‌مونه، چند تا سوال ساده دارم."}
+   219→              </p>
+   220→            </div>
+   221→            <div className="text-start space-y-2">
+   222→              <Label className="text-body-sm text-foreground text-foreground">چطور صدات کنم؟</Label>
+   223→              <Input
+   224→                value={s.name}
+   225→                onChange={(e) => set({ name: e.target.value })}
+   226→                placeholder="اسمت — مثلاً سارا"
+   227→                className="h-13 text-lg bg-card border-input text-foreground placeholder:text-muted-foreground"
+   228→                aria-label="اسمت"
+   229→                onKeyDown={(e) => e.key === "Enter" && s.name.trim() && go(1)}
+   230→              />
+   231→            </div>
+   232→          </div>
+   233→        )}
+   234→
+   235→        {/* مرحله ۱ — درآمد */}
+   236→        {s.step === 1 && (
+   237→          <div className="space-y-7">
+   238→            <div className="text-center">
+   239→              <div className="w-16 h-16 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mx-auto mb-4">
+   240→                <Wallet className="w-8 h-8" />
+   241→              </div>
+   242→              <h2 className="mifa-h3 text-foreground">
+   243→                {s.name}، درآمد ماهانه‌ات معمولاً چقدره؟
+   244→              </h2>
+   245→              <p className="mifa-body-sm text-muted-foreground mt-2">
+   246→                حقوق، مزایا یا هر مبلغ ثابتی که سر ماه می‌رسه
+   247→              </p>
+   248→            </div>
+   249→            <div>
+   250→              <Input
+   251→                inputMode="numeric"
+   252→                value={s.income}
+   253→                onChange={(e) => set({ income: e.target.value })}
+   254→                placeholder="مثلاً ۱۵٬۰۰۰٬۰۰۰"
+   255→                className="numeric h-16 text-3xl font-extrabold text-center bg-card border-input text-foreground placeholder:text-muted-foreground"
+   256→                aria-label="درآمد ماهانه به تومان"
+   257→              />
+   258→              {incomeNum > 0 && (
+   259→                <p className="text-center text-caption text-muted-foreground mt-2">
+   260→                  {formatAmount(incomeNum)} تومان در ماه
+   261→                </p>
+   262→              )}
+   263→              <div className="flex flex-wrap justify-center gap-2 mt-4">
+   264→                {INCOME_QUICK.map((v) => (
+   265→                  <button key={v} type="button" onClick={() => set({ income: String(v) })}
+   266→                    className={`numeric text-caption px-3.5 py-1.5 rounded-full border transition-colors ${
+   267→                      parseAmountInput(s.income) === v
+   268→                        ? "border-primary bg-primary/15 text-primary"
+   269→                        : "border-border text-muted-foreground hover:border-primary/50"
+   270→                    }`}>
+   271→                    {formatCompact(v)}
+   272→                  </button>
+   273→                ))}
+   274→              </div>
+   275→            </div>
+   276→            <div className="flex items-center justify-between gap-3 rounded-2xl bg-muted/50 border border-border px-4 py-3 dark:bg-muted/50">
+   277→              <div className="flex items-center gap-2.5">
+   278→                <Landmark className="w-5 h-5 text-primary" />
+   279→                <div>
+   280→                  <p className="text-body-sm font-semibold text-foreground">حقوق کِی واریز می‌شه؟</p>
+   281→                  <p className="text-caption text-muted-foreground">روز {toPersianDigits(s.payday)} هر ماه</p>
+   282→                </div>
+   283→              </div>
+   284→              <select
+   285→                value={s.payday}
+   286→                onChange={(e) => set({ payday: Number(e.target.value) })}
+   287→                className="numeric bg-card border border-input rounded-lg px-3 py-2 text-body-sm text-foreground"
+   288→                aria-label="روز واریز حقوق"
+   289→              >
+   290→                {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+   291→                  <option key={d} value={d} className="text-foreground">روز {toPersianDigits(d)}</option>
+   292→                ))}
+   293→              </select>
+   294→            </div>
+   295→          </div>
+   296→        )}
+   297→
+   298→        {/* مرحله ۲ — شروع دوره مالی */}
+   299→        {s.step === 2 && (() => {
+   300→          const t = todayJalali()
+   301→          const todayJd = t.day
+   302→          const todayMonth = JALALI_MONTHS[Number(t.key.split("-")[1]) - 1]
+   303→          const mode =
+   304→            s.calOpen ? "custom"
+   305→            : s.cycleStartDay === s.payday && s.payday !== 1 ? "payday"
+   306→            : s.cycleStartDay === todayJd && todayJd !== 1 ? "today"
+   307→            : s.cycleStartDay === 1 ? "month"
+   308→            : "custom"
+   309→          const optCls = (m: string) =>
+   310→            `text-start rounded-2xl border p-3.5 transition-colors ${
+   311→              mode === m ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+   312→            }`
+   313→          return (
+   314→            <div className="space-y-5">
+   315→              <div className="text-center">
+   316→                <div className="w-16 h-16 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mx-auto mb-4">
+   317→                  <CalendarDays className="w-8 h-8" />
+   318→                </div>
+   319→                <h2 className="mifa-h3 text-foreground">دوره مالی از کی شروع بشه؟</h2>
+   320→                <p className="mifa-body-sm text-muted-foreground mt-2">
+   321→                  هر ماه همین روز، پولت دوباره تقسیم می‌شه — مثلاً از اول آذر یا هر روز دیگه از تقویم
+   322→                </p>
+   323→              </div>
+   324→
+   325→              <div className="grid gap-2">
+   326→                <button type="button" onClick={() => set({ cycleStartDay: 1 })} aria-pressed={mode === "month"} className={optCls("month")}>
+   327→                  <div className="flex items-center gap-3">
+   328→                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mode === "month" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+   329→                      <CalendarDays className="w-5 h-5" />
+   330→                    </span>
+   331→                    <div className="flex-1 min-w-0">
+   332→                      <p className="font-bold text-body text-foreground">اول ماه تقویمی</p>
+   333→                      <p className="text-caption text-muted-foreground mt-0.5">هر ماه از روز ۱ شروع می‌شه</p>
+   334→                    </div>
+   335→                    {mode === "month" && <Check className="w-5 h-5 text-primary shrink-0" />}
+   336→                  </div>
+   337→                </button>
+   338→
+   339→                <button type="button" onClick={() => set({ cycleStartDay: s.payday })} aria-pressed={mode === "payday"} className={optCls("payday")}>
+   340→                  <div className="flex items-center gap-3">
+   341→                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mode === "payday" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+   342→                      <Landmark className="w-5 h-5" />
+   343→                    </span>
+   344→                    <div className="flex-1 min-w-0">
+   345→                      <p className="font-bold text-body text-foreground flex items-center gap-2">
+   346→                        روز واریز حقوق
+   347→                        <span className="text-[9px] font-bold bg-primary/15 text-primary rounded-full px-2 py-0.5">پیشنهاد MIFA</span>
+   348→                      </p>
+   349→                      <p className="text-caption text-muted-foreground mt-0.5">هر ماه همزمان با حقوق — روز {toPersianDigits(s.payday)}</p>
+   350→                    </div>
+   351→                    {mode === "payday" && <Check className="w-5 h-5 text-primary shrink-0" />}
+   352→                  </div>
+   353→                </button>
+   354→
+   355→                <button type="button" onClick={() => set({ cycleStartDay: todayJd })} aria-pressed={mode === "today"} className={optCls("today")}>
+   356→                  <div className="flex items-center gap-3">
+   357→                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mode === "today" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+   358→                      <Sparkles className="w-5 h-5" />
+   359→                    </span>
+   360→                    <div className="flex-1 min-w-0">
+   361→                      <p className="font-bold text-body text-foreground">همین امروز</p>
+   362→                      <p className="text-caption text-muted-foreground mt-0.5">از {toPersianDigits(todayJd)} {todayMonth} به بعد رو حساب کن</p>
+   363→                    </div>
+   364→                    {mode === "today" && <Check className="w-5 h-5 text-primary shrink-0" />}
+   365→                  </div>
+   366→                </button>
+   367→
+   368→                <button type="button" onClick={() => set({ calOpen: !s.calOpen })} aria-pressed={mode === "custom"} className={optCls("custom")}>
+   369→                  <div className="flex items-center gap-3">
+   370→                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mode === "custom" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+   371→                      <CalendarDays className="w-5 h-5" />
+   372→                    </span>
+   373→                    <div className="flex-1 min-w-0">
+   374→                      <p className="font-bold text-body text-foreground">از تقویم انتخاب کنم</p>
+   375→                      <p className="text-caption text-muted-foreground mt-0.5">هر روزی که خودت بخوای</p>
+   376→                    </div>
+   377→                    {mode === "custom" && <Check className="w-5 h-5 text-primary shrink-0" />}
+   378→                  </div>
+   379→                </button>
+   380→              </div>
+   381→
+   382→              {s.calOpen && (
+   383→                <div className="rounded-2xl border border-border bg-muted/30 p-3">
+   384→                  <MifaCalendar
+   385→                    monthKey={s.calMonth}
+   386→                    onShiftMonth={(d) => set({ calMonth: shiftMonth(s.calMonth, d) })}
+   387→                    selectedDay={s.cycleStartDay}
+   388→                    onSelectDay={(day) => set({ cycleStartDay: day })}
+   389→                  />
+   390→                </div>
+   391→              )}
+   392→
+   393→              <div className="rounded-2xl bg-primary/10 border border-primary/25 px-4 py-3 flex items-start gap-2.5">
+   394→                <CalendarDays className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+   395→                <p className="text-body-sm text-foreground">
+   396→                  دوره اول: <span className="font-bold">{cycleLabel(firstCycleKey, s.cycleStartDay)}</span> — {toPersianDigits(firstCycleDays)} روز
+   397→                  {firstDaysLeft < firstCycleDays ? ` · ${toPersianDigits(firstDaysLeft)} روزش باقی مونده` : ""}
+   398→                </p>
+   399→              </div>
+   400→            </div>
+   401→          )
+   402→        })()}
+   403→
+   404→        {/* مرحله ۳ — خرج ثابت */}
+   405→        {s.step === 3 && (
+   406→          <div className="space-y-6">
+   407→            <div className="text-center">
+   408→              <div className="w-16 h-16 rounded-2xl bg-mifa-warning/15 text-mifa-warning flex items-center justify-center mx-auto mb-4">
+   409→                <Home className="w-8 h-8" />
+   410→              </div>
+   411→              <h2 className="mifa-h3 text-foreground">هر ماه چه هزینه‌هایی قطعاً داری؟</h2>
+   412→              <p className="mifa-body-sm text-muted-foreground mt-2">
+   413→                این‌ها اول از بودجه جدا می‌شن تا خرج آزادت حساب شه
+   414→              </p>
+   415→            </div>
+   416→
+   417→            {/* چیدمان پیش‌فرض‌ها */}
+   418→            <div className="flex flex-wrap justify-center gap-2">
+   419→              {PRESETS.map((p) => {
+   420→                const active = s.fixed.some((f) => f.label === p.label)
+   421→                return (
+   422→                  <button key={p.label} type="button" onClick={() => togglePreset(p)}
+   423→                    aria-pressed={active}
+   424→                    className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-caption font-semibold border transition-colors ${
+   425→                      active
+   426→                        ? "border-primary bg-primary/15 text-primary"
+   427→                        : "border-border text-muted-foreground hover:border-primary/50"
+   428→                    }`}>
+   429→                    <CategoryIcon id={p.icon} className="w-3.5 h-3.5" />
+   430→                    {p.label}
+   431→                    {active && <Check className="w-3.5 h-3.5" />}
+   432→                  </button>
+   433→                )
+   434→              })}
+   435→            </div>
+   436→
+   437→            {/* لیست فعال با مبلغ */}
+   438→            {s.fixed.length > 0 && (
+   439→              <div className="space-y-2">
+   440→                {s.fixed.map((f, i) => {
+   441→                  const v = parseAmountInput(f.amount)
+   442→                  return (
+   443→                    <div key={f.label} className="flex items-center gap-2.5 rounded-2xl bg-muted/50 border border-border px-3.5 py-2.5">
+   444→                      <span className="w-9 h-9 rounded-xl bg-mifa-warning/15 text-mifa-warning flex items-center justify-center shrink-0">
+   445→                        <CategoryIcon id={f.icon} className="w-4.5 h-4.5" />
+   446→                      </span>
+   447→                      <span className="text-body-sm font-semibold text-foreground flex-1 min-w-0 truncate">{f.label}</span>
+   448→                      <Input
+   449→                        inputMode="numeric"
+   450→                        value={f.amount}
+   451→                        onChange={(e) => {
+   452→                          const next = [...s.fixed]
+   453→                          next[i] = { ...f, amount: e.target.value }
+   454→                          set({ fixed: next })
+   455→                        }}
+   456→                        placeholder="مبلغ"
+   457→                        className="numeric h-10 w-36 text-start bg-card border-input text-foreground placeholder:text-muted-foreground"
+   458→                        aria-label={`مبلغ ${f.label}`}
+   459→                      />
+   460→                      <button type="button" onClick={() => removeFixed(f.label)}
+   461→                        className="text-muted-foreground/60 hover:text-[#FF5B83] transition-colors shrink-0"
+   462→                        aria-label={`حذف ${f.label}`}>
+   463→                        <X className="w-4.5 h-4.5" />
+   464→                      </button>
+   465→                    </div>
+   466→                  )
+   467→                })}
+   468→                {fixedTotal > 0 && (
+   469→                  <p className="text-caption text-muted-foreground text-center numeric pt-1">
+   470→                    جمع خرج ثابت: {formatAmount(fixedTotal)} تومان
+   471→                  </p>
+   472→                )}
+   473→              </div>
+   474→            )}
+   475→
+   476→            {/* افزودن دلخواه */}
+   477→            <div className="flex gap-2">
+   478→              <Input value={s.customLabel} onChange={(e) => set({ customLabel: e.target.value })}
+   479→                placeholder="هزینه ثابت دیگه‌ای داری؟"
+   480→                className="h-12 bg-card border-input text-foreground placeholder:text-muted-foreground"
+   481→                aria-label="عنوان هزینه ثابت دلخواه" />
+   482→              <Input inputMode="numeric" value={s.customAmount}
+   483→                onChange={(e) => set({ customAmount: e.target.value })}
+   484→                placeholder="مبلغ"
+   485→                className="numeric h-12 w-32 bg-card border-input text-foreground placeholder:text-muted-foreground"
+   486→                aria-label="مبلغ هزینه دلخواه"
+   487→                onKeyDown={(e) => e.key === "Enter" && addFixed(s.customLabel, "bills", s.customAmount)} />
+   488→              <Button type="button" size="icon" onClick={() => addFixed(s.customLabel, "bills", s.customAmount)}
+   489→                className="h-12 w-12 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90" aria-label="افزودن هزینه ثابت">
+   490→                <Plus className="w-5 h-5" />
+   491→              </Button>
+   492→            </div>
+   493→          </div>
+   494→        )}
+   495→
+   496→        {/* مرحله ۴ — پس‌انداز */}
+   497→        {s.step === 4 && (
+   498→          <div className="space-y-5">
+   499→            <div className="text-center">
+   500→              <div className="w-16 h-16 rounded-2xl bg-[#2BD38B]/15 text-[#2BD38B] flex items-center justify-center mx-auto mb-4">
+   501→                <PiggyBank className="w-8 h-8" />
+   502→              </div>
+   503→              <h2 className="mifa-h3 text-foreground">هدف پس‌اندازت چیه؟</h2>
+   504→              <p className="mifa-body-sm text-muted-foreground mt-2">
+   505→                اول پس‌انداز جدا می‌شه، بعد از باقی پول خرج می‌کنی — این‌طوری آخر ماه چیزی برات می‌مونه
+   506→              </p>
+   507→            </div>
+   508→
+   509→            <div className="grid gap-2.5">
+   510→              {/* خودت حساب کن */}
+   511→              <button type="button" onClick={() => set({ savingsMode: "auto" })}
+   512→                aria-pressed={s.savingsMode === "auto"}
+   513→                className={`text-start rounded-2xl border p-4 transition-colors ${
+   514→                  s.savingsMode === "auto"
+   515→                    ? "border-primary bg-primary/10"
+   516→                    : "border-border hover:border-primary/50"
+   517→                }`}>
+   518→                <div className="flex items-center gap-3">
+   519→                  <span className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.savingsMode === "auto" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+   520→                    <Wand2 className="w-5 h-5" />
+   521→                  </span>
+   522→                  <div className="flex-1">
+   523→                    <p className="font-bold text-body text-foreground">خودت برام حساب کن</p>
+   524→                    <p className="text-caption text-muted-foreground mt-0.5">منطقی‌ترین عدد بر اساس درآمد و خرج ثابتت</p>
+   525→                  </div>
+   526→                  {s.savingsMode === "auto" && incomeNum > 0 && (
+   527→                    <span className="numeric text-caption font-bold text-primary whitespace-nowrap">
+   528→                      {formatCompact(autoRec)}
+   529→                    </span>
+   530→                  )}
+   531→                </div>
+   532→              </button>
+   533→
+   534→              {/* عدد مشخص */}
+   535→              <button type="button" onClick={() => set({ savingsMode: "amount" })}
+   536→                aria-pressed={s.savingsMode === "amount"}
+   537→                className={`text-start rounded-2xl border p-4 transition-colors ${
+   538→                  s.savingsMode === "amount"
+   539→                    ? "border-primary bg-primary/10"
+   540→                    : "border-border hover:border-primary/50"
+   541→                }`}>
+   542→                <div className="flex items-center gap-3">
+   543→                  <span className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.savingsMode === "amount" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+   544→                    <Coins className="w-5 h-5" />
+   545→                  </span>
+   546→                  <div className="flex-1">
+   547→                    <p className="font-bold text-body text-foreground">عدد مشخص می‌ذارم</p>
+   548→                    <p className="text-caption text-muted-foreground mt-0.5">مثلاً هر ماه ۲ میلیون پس‌انداز کنم</p>
+   549→                  </div>
+   550→                </div>
+   551→                {s.savingsMode === "amount" && (
+   552→                  <div className="mt-3">
+   553→                    <Input
+   554→                      inputMode="numeric"
+   555→                      value={s.savingsAmount}
+   556→                      onChange={(e) => set({ savingsAmount: e.target.value })}
+   557→                      placeholder="مبلغ پس‌انداز ماهانه"
+   558→                      className="numeric h-13 text-lg text-center bg-card border-input text-foreground placeholder:text-muted-foreground"
+   559→                      aria-label="مبلغ پس‌انداز ماهانه"
+   560→                    />
+   561→                    {savingsAmountNum > 0 && (
+   562→                      <p className="text-caption text-muted-foreground text-center mt-1.5">
+   563→                        {formatAmount(savingsAmountNum)} تومان در ماه
+   564→                      </p>
+   565→                    )}
+   566→                  </div>
+   567→                )}
+   568→              </button>
+   569→
+   570→              {/* درصد */}
+   571→              <button type="button" onClick={() => set({ savingsMode: "percent" })}
+   572→                aria-pressed={s.savingsMode === "percent"}
+   573→                className={`text-start rounded-2xl border p-4 transition-colors ${
+   574→                  s.savingsMode === "percent"
+   575→                    ? "border-primary bg-primary/10"
+   576→                    : "border-border hover:border-primary/50"
+   577→                }`}>
+   578→                <div className="flex items-center gap-3">
+   579→                  <span className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.savingsMode === "percent" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+   580→                    <TrendingUp className="w-5 h-5" />
+   581→                  </span>
+   582→                  <div className="flex-1">
+   583→                    <p className="font-bold text-body text-foreground">درصدی از درآمد</p>
+   584→                    <p className="text-caption text-muted-foreground mt-0.5">هر ماه خودکار حساب می‌شه</p>
+   585→                  </div>
+   586→                  {s.savingsMode === "percent" && (
+   587→                    <span className="numeric text-caption font-bold text-primary whitespace-nowrap">
+   588→                      {toPersianDigits(s.savingsPercent)}٪
+   589→                    </span>
+   590→                  )}
+   591→                </div>
+   592→                {s.savingsMode === "percent" && (
+   593→                  <div className="mt-4 px-1">
+   594→                    <Slider
+   595→                      value={[s.savingsPercent]}
+   596→                      onValueChange={(v) => set({ savingsPercent: v[0] })}
+   597→                      min={5}
+   598→                      max={50}
+   599→                      step={5}
+   600→                      aria-label="درصد پس‌انداز"
+   601→                    />
+   602→                    <div className="flex justify-between text-[10px] text-muted-foreground numeric mt-1.5">
+   603→                      <span>۵٪</span><span>۵۰٪</span>
+   604→                    </div>
+   605→                  </div>
+   606→                )}
+   607→              </button>
+   608→
+   609→              {/* بدون پس‌انداز */}
+   610→              <button type="button" onClick={() => set({ savingsMode: "none" })}
+   611→                aria-pressed={s.savingsMode === "none"}
+   612→                className={`text-start rounded-2xl border p-3.5 transition-colors ${
+   613→                  s.savingsMode === "none"
+   614→                    ? "border-primary bg-primary/10"
+   615→                    : "border-border hover:border-primary/50"
+   616→                }`}>
+   617→                <p className="text-body-sm font-semibold text-muted-foreground">فعلاً نمی‌خوام پس‌انداز کنم</p>
+   618→                <p className="text-caption text-muted-foreground mt-0.5">فقط می‌خوام بدونم پولم کجا می‌ره</p>
+   619→              </button>
+   620→            </div>
+   621→          </div>
+   622→        )}
+   623→
+   624→        {/* مرحله ۵ — خلاصه برنامه */}
+   625→        {s.step === 5 && (
+   626→          <div className="space-y-6">
+   627→            <div className="text-center">
+   628→              <div className="w-16 h-16 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mx-auto mb-4">
+   629→                <Sparkles className="w-8 h-8" />
+   630→              </div>
+   631→              <h2 className="mifa-h3 text-foreground">برنامه ماه {s.name} آماده‌ست!</h2>
+   632→              <p className="mifa-body-sm text-muted-foreground mt-2">
+   633→                هر وقت خرج ثبت کنی، MIFA همین حساب رو زنده به‌روز می‌کنه
+   634→              </p>
+   635→            </div>
+   636→
+   637→            {/* نوار تفکیک درآمد */}
+   638→            {plan.income > 0 && (
+   639→              <div>
+   640→                <div className="h-4 rounded-full overflow-hidden flex bg-muted" dir="ltr">
+   641→                  {(() => {
+   642→                    const fixedPct = (plan.fixedTotal / plan.income) * 100
+   643→                    const savPct = (plan.savings / plan.income) * 100
+   644→                    const flexPct = Math.max(0, 100 - fixedPct - savPct)
+   645→                    return (
+   646→                      <>
+   647→                        <div style={{ width: `${fixedPct}%` }} className="bg-mifa-warning" title="خرج ثابت" />
+   648→                        <div style={{ width: `${savPct}%` }} className="bg-[#2BD38B]" title="پس‌انداز" />
+   649→                        <div style={{ width: `${flexPct}%` }} className="bg-gradient-to-r from-[#08D9D6] to-[#5CE7E3]" title="پول آزاد" />
+   650→                      </>
+   651→                    )
+   652→                  })()}
+   653→                </div>
+   654→                <div className="flex justify-between mt-2 text-[10px] text-muted-foreground numeric">
+   655→                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-mifa-warning inline-block" /> ثابت</span>
+   656→                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#2BD38B] inline-block" /> پس‌انداز</span>
+   657→                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary inline-block" /> آزاد</span>
+   658→                </div>
+   659→              </div>
+   660→            )}
+   661→
+   662→            {/* ردیف‌های برنامه */}
+   663→            <div className="rounded-2xl border border-border bg-muted/40 divide-y divide-border overflow-hidden">
+   664→              <Row icon={<Wallet className="w-4 h-4" />} color="#08D9D6" label="درآمد ماهانه" value={plan.income} />
+   665→              <Row icon={<Home className="w-4 h-4" />} color="#E2AD5D" label={`خرج ثابت (${toPersianDigits(fixedParsed.length)} مورد)`} value={plan.fixedTotal} />
+   666→              <Row icon={<PiggyBank className="w-4 h-4" />} color="#2BD38B" label={plan.savingsLabel} value={plan.savings} />
+   667→              <div className="flex items-center gap-3 px-4 py-3.5 bg-primary/[0.07]">
+   668→                <span className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center shrink-0">
+   669→                  <Sparkles className="w-4 h-4" />
+   670→                </span>
+   671→                <span className="text-body-sm font-bold text-white flex-1 dark:text-white">پول آزاد برای خرج</span>
+   672→                <span className="numeric font-extrabold text-primary text-body">{formatAmount(plan.flexible)}</span>
+   673→              </div>
+   674→            </div>
+   675→
+   676→            {/* سقف روزانه */}
+   677→            <div className="rounded-2xl bg-primary/10 border border-primary/25 px-4 py-3.5 flex items-center gap-3">
+   678→              <span className="w-10 h-10 rounded-xl bg-primary/20 text-primary flex items-center justify-center shrink-0">
+   679→                <Landmark className="w-5 h-5" />
+   680→              </span>
+   681→              <p className="text-body-sm text-foreground">
+   682→                از فردا هر روز حدود <span className="numeric font-extrabold text-primary">{formatAmount(dailyAtStart)}</span> تومان جا برای خرج داری — یعنی آخر ماه {formatCompact(plan.savings)} پس‌انداز برات می‌مونه
+   683→              </p>
+   684→            </div>
+   685→
+   686→            {plan.income > 0 && fixedTotal > plan.income && (
+   687→              <div className="rounded-2xl border border-[#FF2E63]/40 bg-[#FF2E63]/10 px-4 py-3 flex items-start gap-2.5">
+   688→                <AlertTriangle className="w-5 h-5 text-[#FF5B83] shrink-0 mt-0.5" />
+   689→                <p className="text-body-sm text-foreground">
+   690→                  خرج ثابتت از درآمدت بیشتره! برنامه رو بازبینی کن یا درآمدت رو کامل وارد کن.
+   691→                </p>
+   692→              </div>
+   693→            )}
+   694→          </div>
+   695→        )}
+   696→      </div>
+   697→
+   698→      {/* ── دکمه‌های ناوبری ── */}
+   699→      <div className="flex items-center gap-3 pb-2">
+   700→        {s.step > 0 && (
+   701→          <Button variant="outline" onClick={() => go(-1)}
+   702→            className="h-13 px-5 border-border text-foreground hover:bg-muted">
+   703→            <ArrowRight className="w-5 h-5" />
+   704→            قبلی
+   705→          </Button>
+   706→        )}
+   707→        {s.step < 5 ? (
+   708→          <Button onClick={() => canNext && go(1)} disabled={!canNext}
+   709→            className="h-13 flex-1 bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 disabled:opacity-40">
+   710→            {STEPS[s.step + 1] === "درآمد" ? "بزن بریم" : s.step === 4 ? "برنامه‌ات رو ببین" : "بعدی"}
+   711→            <ArrowLeft className="w-5 h-5" />
+   712→          </Button>
+   713→        ) : (
+   714→          <Button onClick={submit} disabled={save.isPending || !canNext}
+   715→            className="h-13 flex-1 bg-primary text-primary-foreground font-extrabold text-lg hover:bg-primary/90 shadow-[0_0_36px_-6px_rgba(8,217,214,0.55)]">
+   716→            {save.isPending ? "..." : editMode ? "ذخیره برنامه" : "شروع کن"}
+   717→            <Check className="w-5 h-5" />
+   718→          </Button>
+   719→        )}
+   720→      </div>
+   721→    </div>
+   722→  )
+   723→}
+   724→
+   725→function Row({ icon, color, label, value }: { icon: React.ReactNode; color: string; label: string; value: number }) {
+   726→  return (
+   727→    <div className="flex items-center gap-3 px-4 py-3.5">
+   728→      <span className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}26`, color }}>
+   729→        {icon}
+   730→      </span>
+   731→      <span className="text-body-sm font-medium text-foreground flex-1">{label}</span>
+   732→      <span className="numeric font-bold text-body text-foreground">{formatAmount(value)}</span>
+   733→    </div>
+   734→  )
+   735→}
+   736→

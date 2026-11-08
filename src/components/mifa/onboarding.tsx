@@ -97,7 +97,8 @@ export function OnboardingWizard({ onDone, editMode = false }: { onDone?: () => 
   }
 
   const s = state
-  const set = (patch: Partial<WizardState>) => setState({ ...state, ...patch })
+  // آپدیت فانکشنال — همیشه روی آخرین state اجرا می‌شه تا آپدیت‌های پشت‌سرهم گم نشن
+  const set = (patch: Partial<WizardState>) => setState((prev) => (prev ? { ...prev, ...patch } : prev))
 
   const incomeNum = parseAmountInput(s.income) ?? 0
   const fixedParsed: FixedItem[] = s.fixed.map((f, i) => ({

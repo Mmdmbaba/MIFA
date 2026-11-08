@@ -128,7 +128,7 @@ function extractTitle(line: string, type: "expense" | "income"): string | null {
 export function parseSmsText(text: string): ParsedSms[] {
   const now = new Date()
   const lines = text
-    .split(/\r?\n|(?=خرج کارت)|(?=واریز)|(?=برداشت)/g)
+    .split(/\r?\n|(?=خرج کارت)|(?=واریز)|(?=برداشت)|(?=خرید)|(?=پرداخت)/g)
     .map((l) => l.trim())
     .filter((l) => l.length >= 5)
 

@@ -25,7 +25,7 @@ export function DonutChart({ slices, size = 180 }: { slices: Slice[]; size?: num
   const c = 2 * Math.PI * r
 
   // محاسبه آفست‌ها به‌صورت خالص (بدون reassign در رندر)
-  const segments = slices.reduce<{ cat: string; color: string; dash: string; offset: number }[]>((acc, s) => {
+  const segments = slices.reduce<{ cat: string; color: string; dash: string; offset: number; len: number }[]>((acc, s) => {
     const prevOffset = acc.length > 0 ? acc[acc.length - 1].offset + acc[acc.length - 1].len : 0
     const len = (s.amount / total) * c
     const dashLen = Math.max(len - 2, 0.5)

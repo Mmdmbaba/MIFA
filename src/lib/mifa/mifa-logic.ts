@@ -1,7 +1,7 @@
 "use client"
 
 // منطق مالی MIFA — محاسبات بودجه، اجازه روزانه، پیش‌بینی و نشت پول (بر پایه دوره مالی)
-import type { Transaction } from "./mifa-hooks"
+import type { Transaction } from "@/components/mifa/mifa-hooks"
 import { CATEGORIES } from "@/lib/mifa/categories"
 import { currentCycleKey, cycleDayOf, daysInCycle, daysLeftInCycle } from "@/lib/mifa/cycle"
 

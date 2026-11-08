@@ -113,7 +113,7 @@ export function useInvalidate() {
 export function useAddTransactions() {
   const invalidate = useInvalidate()
   return useMutation({
-    mutationFn: async (items: Omit<Transaction, "id" | "createdAt" | "source">[] & { source?: string }[]) => {
+    mutationFn: async (items: (Omit<Transaction, "id" | "createdAt" | "source"> & { source?: string })[]) => {
       const res = await fetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

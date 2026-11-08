@@ -12,6 +12,15 @@ interface TxInput {
   source?: string
 }
 
+interface TxRow {
+  type: "expense" | "income"
+  amount: number
+  title: string | null
+  category: string
+  date: Date
+  source: string
+}
+
 // GET /api/transactions?cycle=1404-09-08&startDay=8  یا  ?month=1404-09  یا  ?all=1
 export async function GET(req: NextRequest) {
   try {
@@ -52,7 +61,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const items: TxInput[] = Array.isArray(body) ? body : [body]
 
-    const valid: TxInput[] = []
+    const valid: TxRow[] = []
     for (const it of items) {
       if (!it || typeof it !== "object") continue
       const amount = Math.round(Number(it.amount))
