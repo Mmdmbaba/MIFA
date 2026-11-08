@@ -1,8 +1,16 @@
-// موتور «دوره مالی» MIFA — ماه مالی کاربر از هر روز جلالی‌ای که بخواد شروع می‌شه
-// مثلاً ۱ آذر، روز واریز حقوق یا هر روز دیگه از تقویم.
-// قاعده onboarding وسط ماه: دورۀ اول از «همین امروز» شروع می‌شه و روز قبل از
-// لنگر بعدی تموم می‌شه؛ دوره‌های بعدی روی روز لنگر لنگر می‌شن.
-// کلید دوره مثل "1404-08-17" = تاریخ جلالیِ روز شروع دوره
+// موتور «دوره مالی» MIFA — ماه مالی کاربر از هر تاریخ جلالی‌ای که بخواد شروع می‌شه
+// مثلاً ۱ آذر (حتی اگر در آینده باشد)، روز واریز حقوق، یا هر روز دیگر از تقویم.
+//
+// قواعد:
+//  • دورۀ اول از «تاریخ شروع برنامه» (firstCycleStart) شروع می‌شود و روز قبل از
+//    لنگر بعدی تمام می‌شود؛ اگر تاریخ شروع دقیقاً روی لنگر باشد، دورۀ اول کامل است.
+//  • اگر تاریخ شروع در آینده باشد، امروز «پیش از شروع برنامه» است — دورهٔ اول
+//    نمایش داده می‌شود ولی هنوز فعال نیست (notStarted).
+//  • دوره‌های بعدی روی روز لنگر (روز ماهِ تاریخ شروع) تکرار می‌شوند.
+//  • اگر firstCycleStart نباشد، مبنای دورۀ اول = روز onboarding (رفتار قدیمی).
+//  • کلید دوره مثل "1405-09-01" = تاریخ جلالیِ روز شروع دوره.
+//
+// همه توابع به‌جای آرگومان‌های پراکنده یک PlanCtx می‌گیرند تا دیگر آرگومانی جا نیفتد.
 import { toJalaali, toGregorian, jalaaliMonthLength } from "jalaali-js"
 import { JALALI_MONTHS, monthLabel } from "./jalali"
 import { toPersianDigits } from "./format"
@@ -11,6 +19,27 @@ export interface JDate {
   jy: number
   jm: number
   jd: number
+}
+
+/** زمینه برنامه — از پروفایل ساخته می‌شود و به همه توابع دوره پاس داده می‌شود */
+export interface PlanCtx {
+  /** روز لنگر دوره در تقویم جلالی (۱ تا ۳۱) */
+  startDay: number
+  /** تاریخ onboarding — مبنای پیش‌فرض (قدیمی) دورۀ اول */
+  onboardedAt?: string
+  /** تاریخ شروع برنامه، کلید جلالی مثل "1405-09-01" — اولویتش از onboardedAt بیشتر است */
+  firstCycleStart?: string
+}
+
+/** ساخت ctx از پروفایل (یا هر شیء شبیه پروفایل) */
+export function planCtxFrom(
+  p?: { cycleAnchorDay?: number; onboardedAt?: string; firstCycleStart?: string } | null
+): PlanCtx {
+  return {
+    startDay: clampDay(1404, 1, Math.round(p?.cycleAnchorDay ?? 1)),
+    onboardedAt: p?.onboardedAt,
+    firstCycleStart: p?.firstCycleStart,
+  }
 }
 
 /** روز startDay اگر از طول ماه بیرون بزنه، به آخر ماه گیره می‌کنه */
@@ -52,10 +81,20 @@ export function cycleKeyOfJalali(j: JDate): string {
   return `${j.jy}-${String(j.jm).padStart(2, "0")}-${String(j.jd).padStart(2, "0")}`
 }
 
-/**
- * اولین روز لنگر «بعد از» روز j — اگر j قبل از لنگرِ ماهش باشه همان ماه،
- * وگرنه لنگر ماه بعد.
- */
+/** تاریخ شروع دورۀ اول: انتخاب کاربر، وگرنه روز onboarding، وگرنه null */
+export function firstCycleStartOf(ctx: PlanCtx): JDate | null {
+  if (ctx.firstCycleStart) return parseCycleKey(ctx.firstCycleStart)
+  if (ctx.onboardedAt) return jalaliOf(dayStart(new Date(ctx.onboardedAt)))
+  return null
+}
+
+/** کلید دورۀ اول — یا null اگر برنامه‌ای تعریف نشده */
+export function firstCycleKeyOf(ctx: PlanCtx): string | null {
+  const fs = firstCycleStartOf(ctx)
+  return fs ? cycleKeyOfJalali(fs) : null
+}
+
+/** اولین روز لنگر «بعد از» روز j — اگر j قبل از لنگرِ ماهش باشد همان ماه، وگرنه لنگر ماه بعد */
 export function nextAnchorAfter(j: JDate, anchor: number): JDate {
   const clamped = clampDay(j.jy, j.jm, anchor)
   if (j.jd < clamped) return { jy: j.jy, jm: j.jm, jd: clamped }
@@ -63,18 +102,13 @@ export function nextAnchorAfter(j: JDate, anchor: number): JDate {
   return { jy: n.jy, jm: n.jm, jd: clampDay(n.jy, n.jm, anchor) }
 }
 
-/**
- * آیا این کلید، دورۀ اولِ از-روز-onboarding است؟
- * کلید دورۀ اول همیشه کلیدِ روز onboarding است (چون cycleStartOf برای
- * تاریخ‌های قبل از لنگر بعدی، همان روز onboarding را برمی‌گرداند).
- */
-export function isFirstCycle(key: string, startDay: number, onboardedAt?: string): boolean {
-  if (!onboardedAt) return false
-  const ob = jalaliOf(dayStart(new Date(onboardedAt)))
-  return key === cycleKeyOfJalali(ob)
+/** آیا این کلید، دورۀ اول (از تاریخ شروع برنامه) است؟ */
+export function isFirstCycle(key: string, ctx: PlanCtx): boolean {
+  const fk = firstCycleKeyOf(ctx)
+  return fk !== null && key === fk
 }
 
-/** شروع دوره با قاعده استاندارد (بدون در نظر گرفتن onboarding) */
+/** شروع دوره با قاعده استاندارد لنگر (بدون در نظر گرفتن دورۀ اول) */
 function cycleStartOfStandard(date: Date, startDay: number): JDate {
   const { jy, jm, jd } = jalaliOf(date)
   if (jd >= clampDay(jy, jm, startDay)) {
@@ -86,27 +120,27 @@ function cycleStartOfStandard(date: Date, startDay: number): JDate {
 
 /**
  * شروع دوره‌ای که این تاریخ داخلش قرار می‌گیره.
- * اگر onboardedAt داده شده باشد و تاریخ داخل دورۀ اول (از روز onboarding تا
- * روز قبل از لنگر بعدی) باشد، شروع = روز onboarding؛ وگرنه قاعده لنگر.
+ * تاریخ‌های قبل از «تاریخ شروع برنامه» هم به دورۀ اول (آینده) می‌روند —
+ * این حالت pre-plan است و cycleFacts با notStarted علامتش می‌زند.
  */
-export function cycleStartOf(date: Date, startDay: number, onboardedAt?: string): JDate {
+export function cycleStartOf(date: Date, ctx: PlanCtx): JDate {
   const d = dayStart(date)
-  if (onboardedAt) {
-    const ob = jalaliOf(dayStart(new Date(onboardedAt)))
-    const s1 = nextAnchorAfter(ob, startDay)
-    if (d.getTime() < jToTime(s1)) return ob
+  const fs = firstCycleStartOf(ctx)
+  if (fs) {
+    const s1 = nextAnchorAfter(fs, ctx.startDay)
+    if (d.getTime() < jToTime(s1)) return fs
   }
-  return cycleStartOfStandard(d, startDay)
+  return cycleStartOfStandard(d, ctx.startDay)
 }
 
-/** کلید دورهٔ فعال برای یک تاریخ */
-export function cycleKeyOf(date: Date, startDay: number, onboardedAt?: string): string {
-  return cycleKeyOfJalali(cycleStartOf(date, startDay, onboardedAt))
+/** کلید دورهٔ یک تاریخ */
+export function cycleKeyOf(date: Date, ctx: PlanCtx): string {
+  return cycleKeyOfJalali(cycleStartOf(date, ctx))
 }
 
 /** کلید دورهٔ امروز */
-export function currentCycleKey(startDay: number, onboardedAt?: string): string {
-  return cycleKeyOf(new Date(), startDay, onboardedAt)
+export function currentCycleKey(ctx: PlanCtx): string {
+  return cycleKeyOf(new Date(), ctx)
 }
 
 /** تاریخ شروع (میلادی، نیمه‌شب) */
@@ -115,42 +149,44 @@ export function cycleStartDate(key: string): Date {
 }
 
 /** پایان دوره (انحصاری) */
-export function cycleEndDate(key: string, startDay: number, onboardedAt?: string): Date {
-  if (isFirstCycle(key, startDay, onboardedAt)) {
-    return gregorianOfJ(nextAnchorAfter(parseCycleKey(key), startDay))
+export function cycleEndDate(key: string, ctx: PlanCtx): Date {
+  if (isFirstCycle(key, ctx)) {
+    const fs = parseCycleKey(key)
+    return gregorianOfJ(nextAnchorAfter(fs, ctx.startDay))
   }
   const { jy, jm } = parseCycleKey(key)
   const next = shiftJalaliMonth(jy, jm, 1)
-  return gregorianOfJ({ jy: next.jy, jm: next.jm, jd: clampDay(next.jy, next.jm, startDay) })
+  return gregorianOfJ({ jy: next.jy, jm: next.jm, jd: clampDay(next.jy, next.jm, ctx.startDay) })
 }
 
-export function cycleRange(key: string, startDay: number, onboardedAt?: string): { start: Date; end: Date } {
-  return { start: cycleStartDate(key), end: cycleEndDate(key, startDay, onboardedAt) }
+export function cycleRange(key: string, ctx: PlanCtx): { start: Date; end: Date } {
+  return { start: cycleStartDate(key), end: cycleEndDate(key, ctx) }
 }
 
 /** طول دوره به روز */
-export function daysInCycle(key: string, startDay: number, onboardedAt?: string): number {
-  const { start, end } = cycleRange(key, startDay, onboardedAt)
+export function daysInCycle(key: string, ctx: PlanCtx): number {
+  const { start, end } = cycleRange(key, ctx)
   return Math.max(1, Math.round((end.getTime() - start.getTime()) / 86_400_000))
 }
 
 /** چندمین روز دوره برای یک تاریخ (۱-مبنا)؛ خارج دوره → null */
-export function cycleDayOf(date: Date, key: string, startDay: number, onboardedAt?: string): number | null {
+export function cycleDayOf(date: Date, key: string, ctx: PlanCtx): number | null {
   const start = cycleStartDate(key)
-  const end = cycleEndDate(key, startDay, onboardedAt)
+  const end = cycleEndDate(key, ctx)
   const d = dayStart(date)
   const diff = Math.round((d.getTime() - start.getTime()) / 86_400_000)
   if (diff >= 0 && d.getTime() < end.getTime()) return diff + 1
   return null
 }
 
-/** روزهای باقی‌مانده دوره (شامل امروز)؛ دوره آینده = کل طول، دوره گذشته = ۰ */
-export function daysLeftInCycle(key: string, startDay: number, onboardedAt?: string): number {
+/** روزهای باقی‌مانده دوره (شامل امروز)؛ دورهٔ آینده/هنوز شروع‌نشده = کل طول، دورهٔ گذشته = ۰ */
+export function daysLeftInCycle(key: string, ctx: PlanCtx): number {
   const today = dayStart(new Date())
-  const total = daysInCycle(key, startDay, onboardedAt)
-  const cur = currentCycleKey(startDay, onboardedAt)
+  const total = daysInCycle(key, ctx)
+  const cur = currentCycleKey(ctx)
   if (key === cur) {
-    const day = cycleDayOf(today, key, startDay, onboardedAt) ?? 1
+    if (today.getTime() < cycleStartDate(key).getTime()) return total // pre-plan
+    const day = cycleDayOf(today, key, ctx) ?? 1
     return Math.max(1, total - day + 1)
   }
   return key > cur ? total : 0
@@ -158,46 +194,59 @@ export function daysLeftInCycle(key: string, startDay: number, onboardedAt?: str
 
 /**
  * کلید دوره قبل/بعد — اگر از اولین دوره عبور کنیم null برمی‌گردد.
+ * دورهٔ قبل از «دومین دوره» دقیقاً دورۀ اول است (نه یک ماه شبح‌وار قبل از آن).
  */
-export function shiftCycleKey(key: string, delta: number, startDay: number, onboardedAt?: string): string | null {
+export function shiftCycleKey(key: string, delta: number, ctx: PlanCtx): string | null {
   if (delta === 0) return key
   if (delta > 0) {
-    if (isFirstCycle(key, startDay, onboardedAt)) {
-      const end = cycleEndDate(key, startDay, onboardedAt)
-      return cycleKeyOf(end, startDay, onboardedAt)
+    if (isFirstCycle(key, ctx)) {
+      const end = cycleEndDate(key, ctx)
+      return cycleKeyOf(end, ctx)
     }
     const { jy, jm, jd } = parseCycleKey(key)
     const next = shiftJalaliMonth(jy, jm, delta)
     return cycleKeyOfJalali({ jy: next.jy, jm: next.jm, jd: clampDay(next.jy, next.jm, jd) })
   }
   // دوره قبل
-  if (isFirstCycle(key, startDay, onboardedAt)) return null
+  if (isFirstCycle(key, ctx)) return null
+  const fk = firstCycleKeyOf(ctx)
+  if (fk) {
+    const secondKey = cycleKeyOf(cycleEndDate(fk, ctx), ctx)
+    if (key === secondKey) return fk
+    if (key < secondKey) return null // محض احتیاط — جایی قبل از دورۀ اول دوره‌ای وجود ندارد
+  }
   const { jy, jm, jd } = parseCycleKey(key)
   const prev = shiftJalaliMonth(jy, jm, -1)
-  const prevKey = cycleKeyOfJalali({ jy: prev.jy, jm: prev.jm, jd: clampDay(prev.jy, prev.jm, jd) })
-  if (onboardedAt && isFirstCycle(prevKey, startDay, onboardedAt)) return prevKey
-  return prevKey
+  return cycleKeyOfJalali({ jy: prev.jy, jm: prev.jm, jd: clampDay(prev.jy, prev.jm, jd) })
 }
 
 /**
- * طول دوره «نامزد» کامل — برای کسری کردن بودجهٔ دورۀ اولِ ناقص.
+ * طول دورهٔ «نامزد» کامل — برای کسری کردن بودجهٔ دورۀ اولِ ناقص.
  * برای دورۀ اول = طول دورۀ بعدی (استاندارد)؛ برای بقیه = طول خود دوره.
  */
-export function nominalCycleDays(key: string, startDay: number, onboardedAt?: string): number {
-  if (isFirstCycle(key, startDay, onboardedAt)) {
-    const next = shiftCycleKey(key, 1, startDay, onboardedAt)
-    if (next) return daysInCycle(next, startDay, onboardedAt)
+export function nominalCycleDays(key: string, ctx: PlanCtx): number {
+  if (isFirstCycle(key, ctx)) {
+    const next = shiftCycleKey(key, 1, ctx)
+    if (next) return daysInCycle(next, ctx)
   }
-  return daysInCycle(key, startDay, onboardedAt)
+  return daysInCycle(key, ctx)
 }
 
-/** عنوان فارسی دوره — «آذر ۱۴۰۴» یا بازه «۱۷ آبان – ۳۰ آبان» */
-export function cycleLabel(key: string, startDay: number, onboardedAt?: string): string {
+/** آیا دورۀ اول دقیقاً روی روز لنگر شروع می‌شود (یعنی کامل است)؟ */
+export function firstCycleIsFull(ctx: PlanCtx): boolean {
+  const fs = firstCycleStartOf(ctx)
+  if (!fs) return true
+  return fs.jd === clampDay(fs.jy, fs.jm, ctx.startDay)
+}
+
+/** عنوان فارسی دوره — «آذر ۱۴۰۵» یا بازه «۱۷ آبان – ۳۰ آبان» */
+export function cycleLabel(key: string, ctx: PlanCtx): string {
   const { jy, jm, jd } = parseCycleKey(key)
-  if (startDay <= 1 && !isFirstCycle(key, startDay, onboardedAt)) {
+  const isFullMonth = ctx.startDay <= 1 && jd === 1 && (!isFirstCycle(key, ctx) || firstCycleIsFull(ctx))
+  if (isFullMonth) {
     return monthLabel(`${jy}-${String(jm).padStart(2, "0")}`)
   }
-  const endDate = new Date(cycleEndDate(key, startDay, onboardedAt))
+  const endDate = new Date(cycleEndDate(key, ctx))
   endDate.setDate(endDate.getDate() - 1)
   const pe = jalaliOf(endDate)
   if (pe.jm === jm) {
@@ -206,30 +255,35 @@ export function cycleLabel(key: string, startDay: number, onboardedAt?: string):
   return `${toPersianDigits(jd)} ${JALALI_MONTHS[jm - 1]} – ${toPersianDigits(pe.jd)} ${JALALI_MONTHS[pe.jm - 1]}`
 }
 
-/** عنوان کوتاه برای متن‌های خالی: «آذر ۱۴۰۴» یا «دورهٔ ۱۷ آبان» */
-export function cycleLabelShort(key: string, startDay: number, onboardedAt?: string): string {
+/** عنوان کوتاه برای متن‌های خالی: «آذر ۱۴۰۵» یا «دورهٔ ۱۷ آبان» */
+export function cycleLabelShort(key: string, ctx: PlanCtx): string {
   const { jy, jm, jd } = parseCycleKey(key)
-  if (startDay <= 1 && !isFirstCycle(key, startDay, onboardedAt)) {
+  const isFullMonth = ctx.startDay <= 1 && jd === 1 && (!isFirstCycle(key, ctx) || firstCycleIsFull(ctx))
+  if (isFullMonth) {
     return monthLabel(`${jy}-${String(jm).padStart(2, "0")}`)
   }
   return `دورهٔ ${toPersianDigits(jd)} ${JALALI_MONTHS[jm - 1]}`
 }
 
-/** پیش‌نمایش دورۀ اول برای onboarding/تنظیمات: از امروز تا روز قبل از لنگر بعدی */
-export function firstCyclePreview(startDay: number, from: Date = new Date()): {
+/** پیش‌نمایش دورۀ اول برای onboarding/تنظیمات، از تاریخ انتخابی کاربر */
+export interface FirstCyclePreview {
+  key: string
   start: Date
   end: Date
   days: number
   label: string
-} {
-  const start = dayStart(from)
-  const end = gregorianOfJ(nextAnchorAfter(jalaliOf(start), startDay))
+  /** روزهای مانده تا شروع (۰ = از همین امروز) */
+  startsInDays: number
+  notStarted: boolean
+}
+
+export function firstCyclePreview(startDay: number, fs: JDate, now: Date = new Date()): FirstCyclePreview {
+  const key = cycleKeyOfJalali(fs)
+  const start = gregorianOfJ(fs)
+  const end = gregorianOfJ(nextAnchorAfter(fs, startDay))
   const days = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86_400_000))
-  const pe = jalaliOf(new Date(end.getTime() - 86_400_000))
-  const ps = jalaliOf(start)
-  const label =
-    ps.jm === pe.jm
-      ? `${toPersianDigits(ps.jd)}–${toPersianDigits(pe.jd)} ${JALALI_MONTHS[ps.jm - 1]}`
-      : `${toPersianDigits(ps.jd)} ${JALALI_MONTHS[ps.jm - 1]} – ${toPersianDigits(pe.jd)} ${JALALI_MONTHS[pe.jm - 1]}`
-  return { start, end, days, label }
+  const label = cycleLabel(key, { startDay, firstCycleStart: key })
+  const today = dayStart(now)
+  const startsInDays = Math.max(0, Math.round((start.getTime() - today.getTime()) / 86_400_000))
+  return { key, start, end, days, label, startsInDays, notStarted: startsInDays > 0 }
 }

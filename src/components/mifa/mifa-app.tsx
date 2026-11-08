@@ -10,7 +10,7 @@ import { TransactionsView } from "./transactions-view"
 import { InsightsView } from "./insights-view"
 import { SettingsView } from "./settings-view"
 import { QuickAddDialog } from "./quick-add-dialog"
-import { currentCycleKey, cycleLabel, shiftCycleKey } from "@/lib/mifa/cycle"
+import { currentCycleKey, cycleLabel, shiftCycleKey, planCtxFrom } from "@/lib/mifa/cycle"
 import { useProfile } from "./mifa-hooks"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
@@ -40,14 +40,14 @@ export function MifaApp() {
 
   const p = profile.data?.profile ?? null
   const onboarded = !!p?.onboarded
-  const startDay = p?.cycleAnchorDay ?? 1
-  const onboardedAt = p?.onboardedAt
-  const cycle = cycleOverride ?? currentCycleKey(startDay, onboardedAt)
+  const ctx = planCtxFrom(p)
+  const cycle = cycleOverride ?? currentCycleKey(ctx)
 
-  // با تغییر روز شروع دوره، برگرد به دوره جاری
-  const [prevStartDay, setPrevStartDay] = useState(startDay)
-  if (prevStartDay !== startDay) {
-    setPrevStartDay(startDay)
+  // با تغییر تنظیمات دوره (روز شروع یا تاریخ شروع برنامه)، برگرد به دوره جاری
+  const ctxKey = `${ctx.startDay}|${ctx.firstCycleStart ?? ""}`
+  const [prevCtxKey, setPrevCtxKey] = useState(ctxKey)
+  if (prevCtxKey !== ctxKey) {
+    setPrevCtxKey(ctxKey)
     setCycleOverride(null)
   }
 
@@ -93,9 +93,9 @@ export function MifaApp() {
     )
   }
 
-  const currentCycle = currentCycleKey(startDay, onboardedAt)
+  const currentCycle = currentCycleKey(ctx)
   const isCurrent = cycle === currentCycle
-  const canGoPrev = !!shiftCycleKey(cycle, -1, startDay, onboardedAt)
+  const canGoPrev = !!shiftCycleKey(cycle, -1, ctx)
   const canGoNext = cycle < currentCycle
 
   return (
@@ -111,7 +111,7 @@ export function MifaApp() {
           {tab !== "settings" && (
             <div className="flex items-center gap-0.5">
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" disabled={!canGoNext}
-                onClick={() => setCycleOverride(shiftCycleKey(cycle, 1, startDay, onboardedAt))} aria-label="دوره بعد">
+                onClick={() => setCycleOverride(shiftCycleKey(cycle, 1, ctx))} aria-label="دوره بعد">
                 <ChevronRight className="w-5 h-5" />
               </Button>
               <button
@@ -120,10 +120,10 @@ export function MifaApp() {
                   isCurrent ? "text-primary" : "text-foreground hover:bg-muted"
                 }`}
                 title={isCurrent ? "دوره جاری" : "برگشت به دوره جاری"}>
-                {cycleLabel(cycle, startDay, onboardedAt)}
+                {cycleLabel(cycle, ctx)}
               </button>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" disabled={!canGoPrev}
-                onClick={() => setCycleOverride(shiftCycleKey(cycle, -1, startDay, onboardedAt))} aria-label="دوره قبل">
+                onClick={() => setCycleOverride(shiftCycleKey(cycle, -1, ctx))} aria-label="دوره قبل">
                 <ChevronLeft className="w-5 h-5" />
               </Button>
             </div>

@@ -9,11 +9,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { RibbonMark } from "./mifa-logo"
-import { AnchorDayPicker } from "./anchor-day-picker"
+import { CycleStartPicker } from "./cycle-start-picker"
 import { useProfile, useTransactions, useUpdateProfile, useAddTransactions, useClearAll } from "./mifa-hooks"
 import { computePlanCore } from "@/lib/mifa/plan"
-import { cycleFacts } from "@/lib/mifa/mifa-logic"
-import { currentCycleKey } from "@/lib/mifa/cycle"
+import { planCtxFrom, parseCycleKey, firstCyclePreview, firstCycleStartOf, cycleKeyOfJalali, type PlanCtx } from "@/lib/mifa/cycle"
 import { todayJalali } from "@/lib/mifa/jalali"
 import { transactionsToCsv, downloadCsv, parseCsv } from "@/lib/mifa/csv"
 import { formatAmount, toPersianDigits } from "@/lib/mifa/format"
@@ -46,15 +45,16 @@ export function SettingsView({
   const transactions = txs.data ?? []
 
   const today = todayJalali()
-  const [anchorConfirmOpen, setAnchorConfirmOpen] = useState(false)
-  const [pendingAnchor, setPendingAnchor] = useState<number | null>(null)
+  const [startConfirmOpen, setStartConfirmOpen] = useState(false)
+  const [pendingStart, setPendingStart] = useState<string | null>(null)
   const [clearOpen, setClearOpen] = useState(false)
   const [clearChecked, setClearChecked] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  const ctx = p ? planCtxFrom(p) : null
   const core = useMemo(() => (p ? computePlanCore(p) : null), [p])
-  const currentAnchorCycle = p ? currentCycleKey(p.cycleAnchorDay, p.onboardedAt) : ""
-  const anchorFacts = p ? cycleFacts(currentAnchorCycle, p.cycleAnchorDay, p.onboardedAt) : null
+  const effectiveFs = ctx ? firstCycleStartOf(ctx) : null
+  const currentStartPreview = effectiveFs ? firstCyclePreview(ctx!.startDay, effectiveFs) : null
 
   const exportCsv = () => {
     if (transactions.length === 0) {
@@ -124,29 +124,40 @@ export function SettingsView({
         )}
       </section>
 
-      {/* ── روز شروع دوره ── */}
+      {/* ── تاریخ شروع دوره ── */}
       <section className="rounded-2xl border border-border bg-card/60 p-5" aria-labelledby="set-anchor">
         <h2 id="set-anchor" className="mifa-h4 text-foreground flex items-center gap-2 mb-1">
           <CalendarDays className="w-5 h-5 text-primary" />
-          روز شروع دوره مالی
+          تاریخ شروع دوره مالی
         </h2>
         <p className="text-caption text-muted-foreground mb-4">
-          الان دوره‌ات از روز <span className="numeric font-bold text-foreground">{toPersianDigits(p?.cycleAnchorDay ?? 1)}</span> هر ماه جلالی شروع می‌شود
-          {anchorFacts && <> — دوره جاری: <span className="font-bold text-foreground">{anchorFacts.label}</span></>}
+          الان برنامه‌ات از{" "}
+          <span className="font-bold text-foreground">
+            {currentStartPreview
+              ? currentStartPreview.notStarted
+                ? `${currentStartPreview.label} (هنوز شروع نشده)`
+                : currentStartPreview.label
+              : `روز ${toPersianDigits(p?.cycleAnchorDay ?? 1)} هر ماه`}
+          </span>{" "}
+          شروع می‌شود و هر ماه روی همان روز تکرار می‌شود.
         </p>
-        <AnchorDayPicker
-          compact
-          value={pendingAnchor ?? p?.cycleAnchorDay ?? 1}
-          todayDay={today.day}
-          onChange={(d) => {
-            if (d === (p?.cycleAnchorDay ?? 1)) return
-            setPendingAnchor(d)
-            setAnchorConfirmOpen(true)
-          }}
-        />
+        {ctx && (
+          <CycleStartPicker
+            compact
+            value={pendingStart ?? effectiveStartKey(ctx)}
+            onChange={(k) => {
+              // اگر هم تاریخ شروع و هم روزِ ماهِ آن با تنظیم فعلی یکی باشد، کاری نکن
+              const sameStart = k === effectiveStartKey(ctx)
+              const sameAnchor = parseCycleKey(k).jd === (p?.cycleAnchorDay ?? 1)
+              if (sameStart && sameAnchor) return
+              setPendingStart(k)
+              setStartConfirmOpen(true)
+            }}
+          />
+        )}
         <p className="text-caption text-muted-foreground mt-3 flex items-start gap-1.5">
           <AlertTriangle className="w-4 h-4 text-mifa-warning shrink-0 mt-0.5" />
-          با تغییر این روز، دوره‌ها و سقف روزانه از نو محاسبه می‌شوند.
+          با تغییر تاریخ شروع، دوره‌ها و سقف روزانه از نو محاسبه می‌شوند؛ دوره‌های بعدی هم روی همان روزِ ماه تکرار می‌شوند.
         </p>
       </section>
 
@@ -236,14 +247,25 @@ export function SettingsView({
         </p>
       </section>
 
-      {/* ── تأیید تغییر روز شروع ── */}
-      <AlertDialog open={anchorConfirmOpen} onOpenChange={setAnchorConfirmOpen}>
+      {/* ── تأیید تغییر تاریخ شروع ── */}
+      <AlertDialog open={startConfirmOpen} onOpenChange={setStartConfirmOpen}>
         <AlertDialogContent className="rounded-3xl bg-card border-border max-w-sm">
           <AlertDialogHeader className="text-start">
-            <AlertDialogTitle className="text-foreground">روز شروع دوره عوض شود؟</AlertDialogTitle>
+            <AlertDialogTitle className="text-foreground">تاریخ شروع دوره عوض شود؟</AlertDialogTitle>
             <AlertDialogDescription>
-              دوره جدید از روز <span className="numeric font-bold">{toPersianDigits(pendingAnchor ?? 1)}</span> شروع می‌شود و
-              سقف خرج روزانه از همین حالا بر اساس روزهای باقی‌مانده دوره جدید حساب می‌شود.
+              {pendingStart && (
+                <>
+                  دوره جدید از{" "}
+                  <span className="numeric font-bold">
+                    {(() => {
+                      const { jy, jm, jd } = parseCycleKey(pendingStart)
+                      return firstCyclePreview(jd, { jy, jm, jd }).label
+                    })()}
+                  </span>{" "}
+                  شروع می‌شود و دوره‌های بعدی هر ماه روی روز {toPersianDigits(parseCycleKey(pendingStart).jd)} تکرار می‌شوند.
+                  سقف خرج روزانه از نو محاسبه می‌شود.
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-2">
@@ -251,13 +273,14 @@ export function SettingsView({
             <AlertDialogAction
               className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => {
-                if (pendingAnchor) {
+                if (pendingStart) {
+                  const { jd } = parseCycleKey(pendingStart)
                   updateProfile.mutate(
-                    { cycleAnchorDay: pendingAnchor },
-                    { onSuccess: () => toast({ title: "روز شروع دوره عوض شد ✓", description: "سقف روزانه از نو حساب شد" }) }
+                    { firstCycleStart: pendingStart, cycleAnchorDay: jd },
+                    { onSuccess: () => toast({ title: "تاریخ شروع دوره عوض شد ✓", description: "سقف روزانه از نو حساب شد" }) }
                   )
                 }
-                setPendingAnchor(null)
+                setPendingStart(null)
               }}
             >
               تغییر بده
@@ -309,6 +332,14 @@ export function SettingsView({
       </AlertDialog>
     </div>
   )
+}
+
+/** کلید جلالیِ «شروع مؤثر دورۀ اول» برای نمایش در تقویم تنظیمات */
+function effectiveStartKey(ctx: PlanCtx): string {
+  const fs = firstCycleStartOf(ctx)
+  if (fs) return cycleKeyOfJalali(fs)
+  const t = parseCycleKey("1404-01-01") // نباید رخ دهد — پروفایل همیشه onboardedAt دارد
+  return cycleKeyOfJalali(t)
 }
 
 function Row({ label, value, sub, strong = false, icon }: { label: string; value: string; sub?: string; strong?: boolean; icon?: React.ReactNode }) {

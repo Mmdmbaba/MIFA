@@ -1,6 +1,6 @@
 "use client"
 
-// جادوگر شروع MIFA — ۶ مرحله: خوش‌آمد، درآمد، خرج ثابت، پس‌انداز، روز شروع دوره، نتیجه
+// جادوگر شروع MIFA — ۶ مرحله: خوش‌آمد، درآمد، خرج ثابت، پس‌انداز، تاریخ شروع، نتیجه
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -8,14 +8,14 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { RibbonMark } from "./mifa-logo"
 import { AmountInput } from "./amount-input"
-import { AnchorDayPicker } from "./anchor-day-picker"
+import { CycleStartPicker } from "./cycle-start-picker"
 import { FixedKindIcon } from "./mifa-icons"
 import { useSaveProfile } from "./mifa-hooks"
 import type { FixedExpense, FixedKind, Profile, SavingsMode } from "@/lib/mifa/types"
 import { FIXED_KINDS, FIXED_KIND_MAP } from "@/lib/mifa/types"
 import { resolveSavings } from "@/lib/mifa/plan"
-import { computeSnapshot } from "@/lib/mifa/mifa-logic"
-import { currentCycleKey, firstCyclePreview } from "@/lib/mifa/cycle"
+import { computeSnapshot, type PlanSnapshot } from "@/lib/mifa/mifa-logic"
+import { currentCycleKey, firstCyclePreview, parseCycleKey, cycleKeyOfJalali, jalaliOf, dayStart, type PlanCtx } from "@/lib/mifa/cycle"
 import { todayJalali } from "@/lib/mifa/jalali"
 import { formatAmount, formatCompact, parseAmountInput, toPersianDigits } from "@/lib/mifa/format"
 import { useToast } from "@/hooks/use-toast"
@@ -45,7 +45,18 @@ interface WizardState {
   fxAmount: string
   savingsMode: SavingsMode
   savingsAmount: string
-  anchorDay: number
+  /** تاریخ شروع برنامه — کلید جلالی */
+  fsKey: string
+  /** آیا کاربر تاریخ شروع را عوض کرده؟ (در حالت ویرایش، نبودش یعنی حفظ تنظیم قبلی) */
+  fsTouched: boolean
+}
+
+function todayKey(): string {
+  return cycleKeyOfJalali(jalaliOf(dayStart(new Date())))
+}
+
+function obDayKey(p: Profile): string {
+  return cycleKeyOfJalali(jalaliOf(dayStart(new Date(p.onboardedAt))))
 }
 
 function initialState(initial?: Profile | null): WizardState {
@@ -63,8 +74,9 @@ function initialState(initial?: Profile | null): WizardState {
     fxLabel: "",
     fxAmount: "",
     savingsMode: initial?.savingsMode ?? "auto",
-    savingsAmount: initial?.savingsMode === "manual" && initial.savingsAmount ? formatAmount(initial.savingsAmount) : "",
-    anchorDay: initial?.cycleAnchorDay ?? 1,
+    savingsAmount: initial?.savingsAmount ? formatAmount(initial.savingsAmount) : "",
+    fsKey: initial ? initial.firstCycleStart ?? obDayKey(initial) : todayKey(),
+    fsTouched: false,
   }
 }
 
@@ -80,7 +92,6 @@ export function OnboardingWizard({
   const [s, setS] = useState<WizardState>(() => initialState(editMode ? initial : null))
   const save = useSaveProfile()
   const { toast } = useToast()
-  const today = todayJalali()
 
   const set = (patch: Partial<WizardState>) => setS((prev) => ({ ...prev, ...patch }))
 
@@ -92,11 +103,21 @@ export function OnboardingWizard({
   const fixedTotal = fixedParsed.reduce((a, f) => a + f.amount, 0)
   const disposable = Math.max(0, incomeNum - fixedTotal)
   const manualNum = parseAmountInput(s.savingsAmount) ?? 0
-  const { savings, label: savingsLabel } = resolveSavings(s.savingsMode, manualNum, disposable)
+  const { savings, label: savingsLabel, note: savingsNote } = resolveSavings(s.savingsMode, manualNum, disposable)
 
-  // پیش‌نمایش دقیق با همان موتور برنامه (دوره اول از امروز) — محاسبه سبک است، هر رندر تازه
-  const initialOnboardedAt = initial?.onboardedAt ?? null
-  let preview: ReturnType<typeof computeSnapshot> | null = null
+  // زمینه دورهٔ مؤثر: اگر کاربر تاریخ شروع را عوض کرده یا onboarding تازه است،
+  // از تاریخ انتخابی؛ وگرنه (ویرایشِ بدون تغییر) از تنظیم فعلی پروفایل.
+  const effectiveCtx: PlanCtx = s.fsTouched
+    ? { startDay: parseCycleKey(s.fsKey).jd, firstCycleStart: s.fsKey }
+    : initial
+      ? { startDay: initial.cycleAnchorDay ?? 1, onboardedAt: initial.onboardedAt, firstCycleStart: initial.firstCycleStart }
+      : { startDay: parseCycleKey(s.fsKey).jd, firstCycleStart: s.fsKey }
+
+  const fsJ = parseCycleKey(s.fsKey)
+  const firstPreview = firstCyclePreview(effectiveCtx.startDay, fsJ)
+
+  // پیش‌نمایش دقیق با همان موتور برنامه — محاسبه سبک است، هر رندر تازه
+  let preview: PlanSnapshot | null = null
   if (incomeNum > 0) {
     const temp: Profile = {
       onboarded: true,
@@ -104,13 +125,12 @@ export function OnboardingWizard({
       fixedExpenses: fixedParsed,
       savingsMode: s.savingsMode,
       savingsAmount: s.savingsMode === "manual" ? manualNum : savings,
-      cycleAnchorDay: s.anchorDay,
-      onboardedAt: initialOnboardedAt ?? new Date().toISOString(),
+      cycleAnchorDay: effectiveCtx.startDay,
+      firstCycleStart: effectiveCtx.firstCycleStart,
+      onboardedAt: effectiveCtx.onboardedAt ?? new Date().toISOString(),
     }
-    preview = computeSnapshot(temp, [], currentCycleKey(s.anchorDay, temp.onboardedAt))
+    preview = computeSnapshot(temp, [], currentCycleKey(effectiveCtx))
   }
-
-  const firstPreview = firstCyclePreview(s.anchorDay)
 
   const canNext = (() => {
     switch (s.step) {
@@ -140,13 +160,15 @@ export function OnboardingWizard({
   }
 
   const submit = () => {
+    const keepInitial = !!initial && !s.fsTouched
     const profile: Profile = {
       onboarded: true,
       monthlyIncome: incomeNum,
       fixedExpenses: fixedParsed,
       savingsMode: s.savingsMode,
       savingsAmount: s.savingsMode === "manual" ? manualNum : savings,
-      cycleAnchorDay: s.anchorDay,
+      cycleAnchorDay: keepInitial ? (initial!.cycleAnchorDay ?? 1) : parseCycleKey(s.fsKey).jd,
+      firstCycleStart: keepInitial ? initial!.firstCycleStart : s.fsKey,
       theme: initial?.theme,
       onboardedAt: initial?.onboardedAt ?? new Date().toISOString(),
     }
@@ -220,16 +242,17 @@ export function OnboardingWizard({
                 disposable={disposable}
                 savings={savings}
                 savingsLabel={savingsLabel}
+                savingsNote={savingsNote}
                 daily={preview ? preview.dailyAllowance : 0}
               />
             )}
             {s.step === 4 && (
               <CycleStep
-                anchorDay={s.anchorDay}
-                setAnchorDay={(d) => set({ anchorDay: d })}
-                todayDay={today.day}
+                fsKey={s.fsKey}
+                setFsKey={(k) => set({ fsKey: k, fsTouched: true })}
                 preview={firstPreview}
                 daily={preview?.dailyAllowance ?? 0}
+                notStarted={firstPreview.notStarted}
               />
             )}
             {s.step === 5 && (
@@ -239,8 +262,7 @@ export function OnboardingWizard({
                 fixedTotal={fixedTotal}
                 savings={savings}
                 savingsLabel={savingsLabel}
-                cycleLabel={firstPreview.label}
-                cycleDays={firstPreview.days}
+                preview={firstPreview}
               />
             )}
           </motion.div>
@@ -476,6 +498,7 @@ function SavingsStep({
   disposable,
   savings,
   savingsLabel,
+  savingsNote,
   daily,
 }: {
   mode: SavingsMode
@@ -485,12 +508,13 @@ function SavingsStep({
   disposable: number
   savings: number
   savingsLabel: string
+  savingsNote?: string
   daily: number
 }) {
   const cards: { id: SavingsMode; title: string; desc: string; icon: typeof PiggyBank }[] = [
     { id: "manual", title: "خودم تعیین می‌کنم", desc: "یک عدد مشخص هر ماه کنار بگذار", icon: PiggyBank },
     { id: "max", title: "حداکثر ممکن", desc: "همه پول آزاد پس‌انداز شود — سخت‌گیرانه اما سریع‌ترین راه", icon: Landmark },
-    { id: "auto", title: "پیشنهاد سیستم", desc: "۲۰٪ پول آزاد؛ تعادلی بین زندگی امروز و آینده", icon: Sparkles },
+    { id: "auto", title: "پیشنهاد سیستم", desc: "۱۰ تا ۳۰٪ پول آزاد، بسته به جیب روزانه‌ات", icon: Sparkles },
   ]
   return (
     <div className="space-y-5">
@@ -547,6 +571,13 @@ function SavingsStep({
         })}
       </div>
 
+      {mode === "auto" && savingsNote && (
+        <p className="text-caption text-muted-foreground text-center -mt-1 flex items-center justify-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+          {savingsNote}
+        </p>
+      )}
+
       <div className="rounded-2xl hero-card px-4 py-3.5 flex items-center gap-3" role="status">
         <TrendingUp className="w-5 h-5 text-primary shrink-0" />
         <p className="text-body-sm" style={{ color: "#EAEAEA" }}>
@@ -563,20 +594,20 @@ function SavingsStep({
   )
 }
 
-// ─── مرحله ۵: روز شروع دوره ───
+// ─── مرحله ۵: تاریخ شروع دوره ───
 
 function CycleStep({
-  anchorDay,
-  setAnchorDay,
-  todayDay,
+  fsKey,
+  setFsKey,
   preview,
   daily,
+  notStarted,
 }: {
-  anchorDay: number
-  setAnchorDay: (d: number) => void
-  todayDay: number
+  fsKey: string
+  setFsKey: (k: string) => void
   preview: ReturnType<typeof firstCyclePreview>
   daily: number
+  notStarted: boolean
 }) {
   return (
     <div className="space-y-5">
@@ -584,14 +615,14 @@ function CycleStep({
         <div className="w-16 h-16 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mx-auto mb-4">
           <CalendarDays className="w-8 h-8" />
         </div>
-        <h2 className="mifa-h3 text-foreground">دوره مالی از کدام روز ماه شروع شود؟</h2>
+        <h2 className="mifa-h3 text-foreground">دوره مالی از کدام روز شروع شود؟</h2>
         <p className="mifa-body-sm text-muted-foreground mt-2">
-          مثلاً از اول آذر یا هر روزی که خودت خواستی — همون روز، پولت دوباره تقسیم می‌شود
+          مثلاً از اول آذر یا هر روزی که خودت خواستی — از همان روز، پولت دوباره تقسیم می‌شود
         </p>
       </div>
 
       <div className="rounded-2xl border border-border bg-card/50 p-4">
-        <AnchorDayPicker value={anchorDay} onChange={setAnchorDay} todayDay={todayDay} />
+        <CycleStartPicker value={fsKey} onChange={setFsKey} />
       </div>
 
       <div className="rounded-2xl bg-primary/10 border border-primary/25 px-4 py-3.5 space-y-1.5">
@@ -601,13 +632,15 @@ function CycleStep({
           <span className="numeric text-muted-foreground">({toPersianDigits(preview.days)} روز)</span>
         </p>
         <p className="text-caption text-muted-foreground ps-7">
-          چون همین حالا شروع می‌کنی، دوره اول از امروز حساب می‌شود و بودجه‌اش به‌اندازه روزهای باقی‌مانده کسری می‌شود.
+          {notStarted
+            ? `برنامه از ${toPersianDigits(preview.startsInDays)} روز دیگر فعال می‌شود؛ سقف روزانه‌ات از همان روز شروع می‌شود و بودجه‌اش کامل تقسیم می‌شود.`
+            : "چون همین حالا شروع می‌کنی، دوره اول از امروز حساب می‌شود؛ اگر امروز وسط ماه باشد بودجه به همان نسبت کسری می‌شود."}
         </p>
       </div>
 
       {daily > 0 && (
         <p className="text-center text-caption text-muted-foreground">
-          یعنی فعلاً هر روز: <span className="numeric font-bold text-foreground">{formatAmount(daily)}</span> تومان
+          یعنی هر روز: <span className="numeric font-bold text-foreground">{formatAmount(daily)}</span> تومان
         </p>
       )}
     </div>
@@ -622,40 +655,70 @@ function ResultStep({
   fixedTotal,
   savings,
   savingsLabel,
-  cycleLabel,
-  cycleDays,
+  preview,
 }: {
-  snapshot: ReturnType<typeof computeSnapshot> | null
+  snapshot: PlanSnapshot | null
   incomeNum: number
   fixedTotal: number
   savings: number
   savingsLabel: string
-  cycleLabel: string
-  cycleDays: number
+  preview: ReturnType<typeof firstCyclePreview>
 }) {
   if (!snapshot) {
     return <Skeleton className="h-64 rounded-3xl" />
   }
+  const factor = snapshot.facts.budgetFactor
+  const prorated = factor < 0.999
+  const cycleDays = preview.days
   return (
     <div className="space-y-6">
       <div className="hero-card rounded-3xl p-7 text-center mifa-pop">
-        <p className="text-body-sm" style={{ color: "rgba(234,234,234,0.75)" }}>هر روز می‌توانی خرج کنی</p>
-        <p className={`numeric mifa-display mt-2 text-glow ${snapshot.dailyAllowance > 0 ? "text-[#5DE6E2]" : "text-[#FF7D9F]"}`}>
-          {formatAmount(snapshot.dailyAllowance)}
-        </p>
-        <p className="text-body-sm mt-1" style={{ color: "rgba(234,234,234,0.75)" }}>تومان</p>
-        <p className="text-caption mt-3" style={{ color: "rgba(234,234,234,0.55)" }}>
-          دوره اول: {cycleLabel} · {toPersianDigits(cycleDays)} روز
-        </p>
+        {preview.notStarted ? (
+          <>
+            <p className="text-body-sm" style={{ color: "rgba(234,234,234,0.75)" }}>
+              دوره‌ات {preview.label} شروع می‌شود؛ هر روز خواهی توانست خرج کنی
+            </p>
+            <p className={`numeric mifa-display mt-2 text-glow text-[#5DE6E2]`}>
+              {formatAmount(snapshot.dailyAllowance)}
+            </p>
+            <p className="text-caption mt-3" style={{ color: "rgba(234,234,234,0.55)" }}>
+              تا شروع: {toPersianDigits(preview.startsInDays)} روز دیگر
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-body-sm" style={{ color: "rgba(234,234,234,0.75)" }}>هر روز می‌توانی خرج کنی</p>
+            <p className={`numeric mifa-display mt-2 text-glow ${snapshot.dailyAllowance > 0 ? "text-[#5DE6E2]" : "text-[#FF7D9F]"}`}>
+              {formatAmount(snapshot.dailyAllowance)}
+            </p>
+            <p className="text-caption mt-3" style={{ color: "rgba(234,234,234,0.55)" }}>
+              دوره اول: {preview.label} · {toPersianDigits(cycleDays)} روز
+            </p>
+          </>
+        )}
       </div>
 
       <div className="rounded-2xl border border-border bg-card/60 divide-y divide-border">
         <BreakdownRow label="درآمد ماهانه" value={incomeNum} sign="+" />
-        <BreakdownRow label="خرج ثابت" value={fixedTotal} sign="−" />
-        <BreakdownRow label={`پس‌انداز (${savingsLabel})`} value={savings} sign="−" />
-        <BreakdownRow label="پول آزاد دوره" value={snapshot.cycleBudget} sign="=" bold />
+        <BreakdownRow label="خرج ثابت ماهانه" value={fixedTotal} sign="−" />
+        <BreakdownRow label={`پس‌انداز ماهانه (${savingsLabel})`} value={savings} sign="−" />
+        <BreakdownRow label="پول آزاد هر ماه کامل" value={incomeNum - fixedTotal - savings} sign="=" />
+        {prorated && (
+          <>
+            <div className="px-4 py-2.5 bg-muted/30">
+              <p className="text-caption text-muted-foreground leading-5">
+                این دوره فقط {toPersianDigits(cycleDays)} روز از ~{toPersianDigits(snapshot.facts.nominalDays)} روز ماه است
+                ({toPersianDigits(Math.round(factor * 100))}٪) — سهم این دوره:
+              </p>
+            </div>
+            <BreakdownRow label="بودجه آزاد همین دوره" value={snapshot.cycleBudget} sign="=" bold />
+          </>
+        )}
+        {!prorated && (
+          <BreakdownRow label="بودجه آزاد این دوره" value={snapshot.cycleBudget} sign="=" bold />
+        )}
         <div className="flex items-center justify-between px-4 py-3">
-          <span className="text-body-sm text-muted-foreground">÷ روزهای باقی‌مانده</span>
+          <span className="text-body-sm text-muted-foreground">÷ روزهای این دوره</span>
           <span className="numeric text-body-sm font-bold text-foreground">{toPersianDigits(snapshot.facts.daysLeft)} روز</span>
         </div>
       </div>

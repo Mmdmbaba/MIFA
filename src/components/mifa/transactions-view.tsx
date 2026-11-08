@@ -17,9 +17,10 @@ import { CategoryBadge, CategoryIcon } from "./mifa-icons"
 import { AmountInput } from "./amount-input"
 import { useDeleteTransaction, useTransactions, useUpdateTransaction, useAddTransactions } from "./mifa-hooks"
 import { groupByDay, cycleFacts } from "@/lib/mifa/mifa-logic"
+import { planCtxFrom } from "@/lib/mifa/cycle"
 import { CATEGORIES, getCategory } from "@/lib/mifa/categories"
 import { parseSmsText, type ParsedSms } from "@/lib/mifa/sms-parser"
-import { formatAmount, toPersianDigits, formatCompact } from "@/lib/mifa/format"
+import { formatAmount, toPersianDigits, formatCompact, parseAmountInput } from "@/lib/mifa/format"
 import { useProfile } from "./mifa-hooks"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
@@ -48,7 +49,7 @@ export function TransactionsView({ cycle }: { cycle: string }) {
   // بازه دوره انتخاب‌شده برای فیلتر
   const range = useMemo(() => {
     if (!p) return null
-    return cycleFacts(cycle, p.cycleAnchorDay, p.onboardedAt)
+    return cycleFacts(cycle, planCtxFrom(p))
   }, [p, cycle])
 
   const filtered = useMemo(() => {

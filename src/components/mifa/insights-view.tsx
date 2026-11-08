@@ -9,6 +9,7 @@ import { useProfile, useTransactions } from "./mifa-hooks"
 import {
   computeLeaks, computeSnapshot, cycleByCategory, cycleFacts, type PlanSnapshot,
 } from "@/lib/mifa/mifa-logic"
+import { planCtxFrom } from "@/lib/mifa/cycle"
 import { getCategory } from "@/lib/mifa/categories"
 import { formatAmount, formatCompact, formatPercent, toPersianDigits } from "@/lib/mifa/format"
 import { TrendingDown, TrendingUp, SearchCheck, CalendarClock, PieChart, Sparkles } from "lucide-react"
@@ -19,6 +20,7 @@ export function InsightsView({ cycle }: { cycle: string }) {
 
   const p = profile.data?.profile ?? null
   const transactions = txs.data ?? []
+  const ctx = useMemo(() => planCtxFrom(p), [p])
 
   const snapshot: PlanSnapshot | null = useMemo(() => {
     if (!p) return null
@@ -27,9 +29,9 @@ export function InsightsView({ cycle }: { cycle: string }) {
 
   const leaks = useMemo(() => {
     if (!p) return []
-    const facts = cycleFacts(cycle, p.cycleAnchorDay, p.onboardedAt)
-    return computeLeaks(transactions, facts, p.cycleAnchorDay, p.onboardedAt)
-  }, [p, transactions, cycle])
+    const facts = cycleFacts(cycle, ctx)
+    return computeLeaks(transactions, facts, ctx)
+  }, [p, transactions, cycle, ctx])
 
   const extra = useMemo(() => {
     if (!snapshot) return null

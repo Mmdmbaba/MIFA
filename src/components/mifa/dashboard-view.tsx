@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { CategoryBadge } from "./mifa-icons"
 import { useProfile, useTransactions } from "./mifa-hooks"
 import { computeSnapshot, groupByDay, type PlanSnapshot } from "@/lib/mifa/mifa-logic"
-import { currentCycleKey } from "@/lib/mifa/cycle"
+import { currentCycleKey, planCtxFrom, cycleLabel } from "@/lib/mifa/cycle"
 import { getCategory } from "@/lib/mifa/categories"
 import { formatAmount, toPersianDigits } from "@/lib/mifa/format"
 import { CATEGORIES } from "@/lib/mifa/categories"
@@ -32,13 +32,15 @@ export function DashboardView({
 
   const p = profile.data?.profile ?? null
   const transactions = txs.data ?? []
+  const ctx = useMemo(() => planCtxFrom(p), [p])
 
   const snapshot: PlanSnapshot | null = useMemo(() => {
     if (!p) return null
     return computeSnapshot(p, transactions, cycle)
   }, [p, transactions, cycle])
 
-  const isCurrent = !!snapshot && cycle === currentCycleKey(p?.cycleAnchorDay ?? 1, p?.onboardedAt)
+  const isCurrent = !!snapshot && cycle === currentCycleKey(ctx)
+  const notStarted = !!snapshot && isCurrent && snapshot.facts.notStarted
 
   const recent = useMemo(() => [...transactions].slice(0, 5), [transactions])
   const recentGroups = useMemo(() => groupByDay(recent), [recent])
@@ -69,45 +71,68 @@ export function DashboardView({
           <div className="relative shrink-0" style={{ width: 108, height: 108 }}>
             <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
               <circle cx="60" cy="60" r="52" fill="none" stroke="var(--ring-track)" strokeWidth="10" />
-              <motion.circle
-                cx="60" cy="60" r="52" fill="none"
-                stroke={overToday ? "#FF2E63" : "#08D9D6"}
-                strokeWidth="10" strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 52}
-                initial={{ strokeDashoffset: 2 * Math.PI * 52 }}
-                animate={{ strokeDashoffset: 2 * Math.PI * 52 * (1 - ringPct) }}
-                transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
-                style={{ filter: `drop-shadow(0 0 8px ${overToday ? "rgba(255,46,99,0.5)" : "rgba(8,217,214,0.5)"})` }}
-              />
+              {notStarted ? (
+                <circle cx="60" cy="60" r="52" fill="none" stroke="#08D9D6" strokeWidth="10" strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 52} strokeDashoffset={2 * Math.PI * 52 * 0.12}
+                  style={{ filter: "drop-shadow(0 0 8px rgba(8,217,214,0.5))" }} />
+              ) : (
+                <motion.circle
+                  cx="60" cy="60" r="52" fill="none"
+                  stroke={overToday ? "#FF2E63" : "#08D9D6"}
+                  strokeWidth="10" strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 52}
+                  initial={{ strokeDashoffset: 2 * Math.PI * 52 }}
+                  animate={{ strokeDashoffset: 2 * Math.PI * 52 * (1 - ringPct) }}
+                  transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
+                  style={{ filter: `drop-shadow(0 0 8px ${overToday ? "rgba(255,46,99,0.5)" : "rgba(8,217,214,0.5)"})` }}
+                />
+              )}
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[10px] font-bold" style={{ color: "rgba(234,234,234,0.6)" }}>از سقف امروز</span>
-              <span className="numeric text-body font-extrabold" style={{ color: overToday ? "#FF7D9F" : "#5DE6E2" }}>
-                {toPersianDigits(Math.round(ringPct * 100))}٪
+              <span className="text-[10px] font-bold" style={{ color: "rgba(234,234,234,0.6)" }}>
+                {notStarted ? "تا شروع" : "از سقف امروز"}
               </span>
+              <span className="numeric text-body font-extrabold" style={{ color: notStarted || !overToday ? "#5DE6E2" : "#FF7D9F" }}>
+                {notStarted
+                  ? toPersianDigits(snapshot!.facts.startsInDays)
+                  : `${toPersianDigits(Math.round(ringPct * 100))}٪`}
+              </span>
+              {notStarted && <span className="text-[10px] font-bold" style={{ color: "rgba(234,234,234,0.6)" }}>روز</span>}
             </div>
           </div>
 
           {/* عدد اصلی */}
           <div className="flex-1 min-w-0">
-            {isCurrent ? (
+            {notStarted ? (
+              <>
+                <p className="text-body-sm" style={{ color: "rgba(234,234,234,0.72)" }}>
+                  برنامه‌ات از <span className="font-extrabold text-primary">{cycleLabel(cycle, ctx)}</span> شروع می‌شود
+                </p>
+                <p className="numeric text-[30px] leading-tight font-black mt-1 text-glow" style={{ color: "#5DE6E2" }}>
+                  {formatAmount(snapshot!.dailyAllowance)}
+                </p>
+                <p className="text-caption mt-1" style={{ color: "rgba(234,234,234,0.6)" }}>
+                  تومان سقف روزانه از همان روز — تا آن موقع خرج‌ها را فقط ثبت کن
+                </p>
+              </>
+            ) : isCurrent ? (
               <>
                 <p className="text-body-sm" style={{ color: "rgba(234,234,234,0.72)" }}>
                   {overToday ? "امروز از سقف رد شدی —" : "امروز می‌توانی خرج کنی"}
                 </p>
                 <p className={`numeric text-[30px] leading-tight font-black mt-1 ${overToday ? "text-glow-rose" : "text-glow"}`}
                   style={{ color: overToday ? "#FF7D9F" : "#5DE6E2" }}>
-                  {formatAmount(Math.abs(snapshot.remainingToday))}
+                  {formatAmount(Math.abs(snapshot!.remainingToday))}
                 </p>
                 <p className="text-caption mt-1" style={{ color: "rgba(234,234,234,0.6)" }}>
-                  {overToday ? "تومان بیشتر از سقف امروز" : "تومان تا آخر امروز"} · سقف: {formatAmount(snapshot.dailyAllowance)}
+                  {overToday ? "تومان بیشتر از سقف امروز" : "تومان تا آخر امروز"} · سقف: {formatAmount(snapshot!.dailyAllowance)}
                 </p>
               </>
             ) : (
               <>
                 <p className="text-body-sm" style={{ color: "rgba(234,234,234,0.72)" }}>این دوره گذشته — برای مرور:</p>
                 <p className="numeric text-[26px] leading-tight font-black mt-1" style={{ color: "#EAEAEA" }}>
-                  {formatAmount(snapshot.spent)} تومان
+                  {formatAmount(snapshot!.spent)} تومان
                 </p>
                 <p className="text-caption mt-1" style={{ color: "rgba(234,234,234,0.6)" }}>مجموع خرج این دوره</p>
               </>
@@ -155,8 +180,8 @@ export function DashboardView({
         <StatChip
           icon={<PiggyBank className="w-4 h-4" />}
           tint="#55C49A"
-          label="پس‌انداز ماه"
-          value={formatAmount(snapshot.savings)}
+          label="پس‌انداز این دوره"
+          value={formatAmount(snapshot.savingsThisCycle)}
         />
       </section>
 

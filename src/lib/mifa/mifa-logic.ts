@@ -12,6 +12,8 @@ import {
   nominalCycleDays,
   shiftCycleKey,
   dayStart,
+  planCtxFrom,
+  type PlanCtx,
 } from "./cycle"
 import { JALALI_MONTHS, JALALI_WEEKDAYS } from "./jalali"
 import { toPersianDigits } from "./format"
@@ -25,43 +27,50 @@ export interface CycleFacts {
   startDay: number
   start: Date
   end: Date
-  /** طول واقعی دوره (برای دورۀ اولِ ناقص = از onboarding تا لنگر بعدی) */
+  /** طول واقعی دوره */
   daysInCycle: number
-  /** روزهای «پول‌دار» دوره — در دورۀ اول از روز onboarding حساب می‌شود */
+  /** روزهای «پول‌دار» دوره — در دورۀ اولِ ناقص کمتر از طول تقویمی است */
   activeDays: number
   /** طول دوره کامل استاندارد — مبنای کسری کردن بودجه دورۀ اول */
   nominalDays: number
   /** ضریب بودجه: min(1, activeDays / nominalDays) */
   budgetFactor: number
-  /** چندمین روز دوره (مبنا: شروع دوره) */
+  /** چندمین روز دوره (مبنا: شروع دوره)؛ pre-plan = ۰ */
   dayNum: number
   daysLeft: number
   isCurrent: boolean
   isPast: boolean
+  /** برنامه هنوز شروع نشده (تاریخ شروع در آینده است) */
+  notStarted: boolean
+  /** چند روز تا شروع برنامه (فقط وقتی notStarted) */
+  startsInDays: number
   label: string
 }
 
-export function cycleFacts(cycleKey: string, startDay: number, onboardedAt?: string): CycleFacts {
-  const { start, end } = cycleRange(cycleKey, startDay, onboardedAt)
+export function cycleFacts(cycleKey: string, ctx: PlanCtx): CycleFacts {
+  const { start, end } = cycleRange(cycleKey, ctx)
   const total = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86_400_000))
-  const cur = currentCycleKey(startDay, onboardedAt)
+  const cur = currentCycleKey(ctx)
   const isCurrent = cycleKey === cur
   const isPast = cycleKey < cur
 
-  const first = isFirstCycle(cycleKey, startDay, onboardedAt)
-  const obDay = first && onboardedAt ? cycleDayOf(dayStart(new Date(onboardedAt)), cycleKey, startDay, onboardedAt) : null
-  const skipped = first && obDay ? obDay - 1 : 0
-  const activeDays = Math.max(1, total - skipped)
-  const nominalDays = nominalCycleDays(cycleKey, startDay, onboardedAt) || total
+  const now = new Date()
+  const todayFloor = dayStart(now)
+  const notStarted = isCurrent && todayFloor.getTime() < start.getTime()
+  const startsInDays = notStarted
+    ? Math.max(1, Math.round((start.getTime() - todayFloor.getTime()) / 86_400_000))
+    : 0
+
+  const activeDays = total
+  const nominalDays = nominalCycleDays(cycleKey, ctx) || total
   const budgetFactor = Math.min(1, activeDays / Math.max(1, nominalDays))
 
-  const now = new Date()
-  const dayNum = isCurrent ? (cycleDayOf(now, cycleKey, startDay, onboardedAt) ?? 1) : isPast ? total : 0
-  const daysLeft = isCurrent ? daysLeftInCycle(cycleKey, startDay, onboardedAt) : isPast ? 0 : total
+  const dayNum = notStarted ? 0 : isCurrent ? (cycleDayOf(now, cycleKey, ctx) ?? 1) : isPast ? total : 0
+  const daysLeft = notStarted ? total : isCurrent ? daysLeftInCycle(cycleKey, ctx) : isPast ? 0 : total
 
   return {
     key: cycleKey,
-    startDay,
+    startDay: ctx.startDay,
     start,
     end,
     daysInCycle: total,
@@ -72,7 +81,9 @@ export function cycleFacts(cycleKey: string, startDay: number, onboardedAt?: str
     daysLeft,
     isCurrent,
     isPast,
-    label: cycleLabel(cycleKey, startDay, onboardedAt),
+    notStarted,
+    startsInDays,
+    label: cycleLabel(cycleKey, ctx),
   }
 }
 
@@ -81,9 +92,11 @@ export function cycleFacts(cycleKey: string, startDay: number, onboardedAt?: str
 export interface CycleMoney {
   /** بودجه آزاد دوره = spendable × ضریب کسری */
   cycleBudget: number
+  /** سهم پس‌انداز در همین دوره (در دورۀ کسری، کسری از پس‌انداز ماهانه) */
+  savingsThisCycle: number
   /** درآمدهای ثبت‌شده داخل دوره (کارهای جانبی و …) */
   incomeExtra: number
-  /** خرج داخل دوره — در دورۀ اول فقط از روز onboarding */
+  /** خرج داخل دوره */
   spent: number
   spentToday: number
   dailyAllowance: number
@@ -100,33 +113,30 @@ export interface CycleMoney {
 export function cycleMoney(core: PlanCore, facts: CycleFacts, transactions: Transaction[]): CycleMoney {
   const start = facts.start
   const end = facts.end
-  const obFloor = isFirstCycle(facts.key, facts.startDay) && facts.budgetFactor < 1
-    ? dayStart(new Date(start))
-    : null
 
   let spent = 0
   let incomeExtra = 0
   for (const t of transactions) {
     const d = new Date(t.date)
     if (d < start || d >= end) continue
-    if (obFloor && d < obFloor) continue // قبل از onboarding در دورۀ اول
     if (t.type === "expense") spent += t.amount
     else incomeExtra += t.amount
   }
 
   const now = new Date()
   const todayFloor = dayStart(now)
+  const tomorrowFloor = new Date(todayFloor.getTime() + 86_400_000)
   let spentToday = 0
   for (const t of transactions) {
     if (t.type !== "expense") continue
     const d = new Date(t.date)
-    if (d >= todayFloor) spentToday += t.amount
+    if (d >= todayFloor && d < tomorrowFloor) spentToday += t.amount
   }
 
   const budget = Math.round(core.spendable * facts.budgetFactor)
   const available = budget + incomeExtra
 
-  const dailyAllowance = facts.isCurrent
+  const dailyAllowance = facts.isCurrent && !facts.notStarted
     ? Math.floor(Math.max(0, available - spent) / Math.max(1, facts.daysLeft))
     : Math.floor(budget / Math.max(1, facts.daysInCycle))
 
@@ -134,17 +144,24 @@ export function cycleMoney(core: PlanCore, facts: CycleFacts, transactions: Tran
   const spentPct = available > 0 ? Math.min((spent / available) * 100, 999) : spent > 0 ? 999 : 0
 
   const elapsed = Math.max(1, facts.activeDays - facts.daysLeft)
-  const projectedSpend = facts.isCurrent ? Math.round((spent / elapsed) * facts.activeDays) : spent
+  const projectedSpend = facts.isCurrent && !facts.notStarted
+    ? Math.round((spent / elapsed) * facts.activeDays)
+    : spent
   const projectedDiff = available - projectedSpend
+
+  const savingsThisCycle = Math.round(core.savings * facts.budgetFactor)
 
   let tone: CycleMoney["tone"]
   let toneText: string
-  if (projectedDiff >= 0) {
+  if (facts.notStarted) {
+    tone = "safe"
+    toneText = `برنامه‌ات از ${facts.label} شروع می‌شود — از همان روز سقف روزانه فعال می‌شود`
+  } else if (projectedDiff >= 0) {
     tone = "safe"
     toneText = projectedDiff > 0
       ? "اگر همین‌طور خرج کنی، آخر دوره پول اضافه می‌آوری"
       : "دقیقاً طبق برنامه جلو می‌ری"
-  } else if (projectedDiff + core.savings >= 0) {
+  } else if (projectedDiff + savingsThisCycle >= 0) {
     tone = "watch"
     toneText = "روال خرجت دارد بخشی از پس‌انداز را می‌خورد"
   } else {
@@ -154,6 +171,7 @@ export function cycleMoney(core: PlanCore, facts: CycleFacts, transactions: Tran
 
   return {
     cycleBudget: budget,
+    savingsThisCycle,
     incomeExtra,
     spent,
     spentToday,
@@ -180,8 +198,9 @@ export function computeSnapshot(
   cycleOverride?: string
 ): PlanSnapshot {
   const core = computePlanCore(profile)
-  const key = cycleOverride ?? currentCycleKey(profile.cycleAnchorDay, profile.onboardedAt)
-  const facts = cycleFacts(key, profile.cycleAnchorDay, profile.onboardedAt)
+  const ctx = planCtxFrom(profile)
+  const key = cycleOverride ?? currentCycleKey(ctx)
+  const facts = cycleFacts(key, ctx)
   const money = cycleMoney(core, facts, transactions)
   return { ...core, ...money, facts, profile }
 }
@@ -218,15 +237,14 @@ export interface LeakItem {
 export function computeLeaks(
   transactions: Transaction[],
   facts: CycleFacts,
-  startDay: number,
-  onboardedAt?: string
+  ctx: PlanCtx
 ): LeakItem[] {
   const current = cycleByCategory(transactions, facts)
   const totalExpense = current.reduce((s, x) => s + x.amount, 0)
-  const prevKey = shiftCycleKey(facts.key, -1, startDay, onboardedAt)
+  const prevKey = shiftCycleKey(facts.key, -1, ctx)
   let prevMap = new Map<string, number>()
   if (prevKey) {
-    const prevFacts = cycleFacts(prevKey, startDay, onboardedAt)
+    const prevFacts = cycleFacts(prevKey, ctx)
     prevMap = new Map(cycleByCategory(transactions, prevFacts).map((x) => [x.category, x.amount]))
   }
   return current.slice(0, 3).map((x) => {
@@ -247,7 +265,7 @@ export function computeLeaks(
 // ─── گروه‌بندی روزانه برای فهرست تراکنش‌ها ───
 
 export interface DayGroup {
-  key: string // "1404-08-17"
+  key: string // "1405-08-17"
   label: string // امروز / دیروز / ۵ آبان
   weekday: string
   expense: number

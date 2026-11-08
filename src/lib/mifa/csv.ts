@@ -60,14 +60,14 @@ function splitCsvLine(line: string): string[] {
 }
 
 export interface CsvImportResult {
-  transactions: Omit<Transaction, "id" | "createdAt">[]
+  transactions: Omit<Transaction, "id">[]
   skipped: number
 }
 
 /** پارس CSV خروجی MIFA — سطرهای نامعتبر نادیده گرفته می‌شوند */
 export function parseCsv(text: string): CsvImportResult {
   const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((l) => l.trim())
-  const transactions: Omit<Transaction, "id" | "createdAt">[] = []
+  const transactions: Omit<Transaction, "id">[] = []
   let skipped = 0
   for (const line of lines.slice(1)) {
     const cells = splitCsvLine(line)

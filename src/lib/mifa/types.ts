@@ -36,11 +36,13 @@ export interface Profile {
   savingsMode: SavingsMode
   /** برای حالت manual؛ نتیجه max/auto هم همین‌جا کش می‌شود */
   savingsAmount: number
-  /** روز شروع دوره مالی در تقویم جلالی — ۱ تا ۳۱ */
+  /** روز شروع دوره مالی در تقویم جلالی — ۱ تا ۳۱ (روز ماهِ تاریخ شروع برنامه) */
   cycleAnchorDay: number
   theme?: ThemePref
-  /** تاریخ onboarding — مبناي دورۀ اول (کوتاه‌شده از امروز تا روز لنگر بعدی) */
+  /** تاریخ onboarding — مبنای دورۀ اول اگر firstCycleStart نداشته باشیم */
   onboardedAt: string
+  /** تاریخ شروع برنامه (کلید جلالی مثل "1405-09-01") — می‌تواند در آینده باشد */
+  firstCycleStart?: string
 }
 
 export const FIXED_KINDS: { id: FixedKind; label: string; color: string }[] = [
