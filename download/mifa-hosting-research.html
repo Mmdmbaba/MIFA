@@ -463,6 +463,68 @@
       </tbody>
     </table>
     </div>
+
+    <h3 style="margin:38px 0 6px;font-size:17.5px;font-weight:800">📦 جواب سؤال بعدی: هر پروژه می‌تواند چند گیگ باشد؟</h3>
+    <p class="sec-lead">سقف حجمی «خود پروژه» (کد و فایل‌های اپ) در پلن رایگان هر پلتفرم — جدا از باندویث ماهانه:</p>
+    <div class="tbl-scroll">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>پلتفرم</th>
+          <th>سقف حجم کل پروژه / دیپلوی</th>
+          <th>سقف هر فایل</th>
+          <th>توضیح</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="p">Cloudflare Pages</span></td>
+          <td><b>سقف حجمی کلی اعلام نشده</b> — تا ۲۰٬۰۰۰ فایل در هر پروژه</td>
+          <td>۲۵ مگابایت</td>
+          <td>جادارترین گزینه؛ اسکریپت هر Worker هم تا ۶۴ مگابایت</td>
+        </tr>
+        <tr>
+          <td><span class="p">Vercel Hobby</span></td>
+          <td>بیلد روی دیسک <b>۳۲ گیگ</b>؛ باندل هر تابع ≤ ۲۵۰MB (بتای «توابع بزرگ»: ۵ گیگ)</td>
+          <td>۱۰۰ مگابایت (فایل سورس)</td>
+          <td>رم هر تابع تا ۲ گیگ؛ برای پایتون سقف تابع ۵۰۰MB</td>
+        </tr>
+        <tr>
+          <td><span class="p">Deno Deploy</span></td>
+          <td><b>۱ گیگابایت</b> کل دیپلوی (کد + استاتیک روی هم)</td>
+          <td>—</td>
+          <td>سقف شفاف و مشخص</td>
+        </tr>
+        <tr>
+          <td><span class="p">GitHub Pages</span></td>
+          <td><b>۱ گیگابایت</b> حجم سایت منتشرشده</td>
+          <td>۱۰۰ مگابایت</td>
+          <td>خود ریپوی گیت‌هاب هم بهتر است زیر ~۵ گیگ بماند</td>
+        </tr>
+        <tr>
+          <td><span class="p">Netlify</span></td>
+          <td>سقف سخت حجم سایت اعلام نشده</td>
+          <td>—</td>
+          <td>محدودیت واقعی‌اش اعتبار ماهانه است (~۱۵ گیگ ترافیک)</td>
+        </tr>
+        <tr>
+          <td><span class="p">Render (استاتیک)</span></td>
+          <td>سقف حجمی مستند نشده</td>
+          <td>—</td>
+          <td>وب‌سرویس داینامیک رایگان فقط ۵۱۲ مگابایت رم دارد</td>
+        </tr>
+        <tr>
+          <td><span class="p">Fly.io (غیررایگان)</span></td>
+          <td>ایمیج کانتینر تا <b>۳ گیگابایت</b></td>
+          <td>—</td>
+          <td>خارج از بودجه صفر تومانی — فقط برای مقایسه</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note note-ok" style="margin-top:16px">
+      <b>برای MIFA چه معنی می‌دهد؟</b> خروجی بیلد یک اپ Next.js معمولی حدود ۱۰ تا ۵۰ مگابایت است و کل کد سورس چند مگابایت — یعنی حتی روی سخت‌گیرترین سقف (GitHub Pages با ۱ گیگ) ده‌ها نسخه اپ جا می‌شود. دیتای مالی‌ات هم جای جداگانه‌ای می‌رود: <b style="color:var(--txt)">D1 تا ۵۰۰ مگابایت در هر دیتابیس (۵ گیگ کل اکانت)</b>، Neon تا ۱ گیگ هر پروژه، Supabase تا ۵۰۰ مگابایت — برای صدها هزار تراکنش بیش از کافی است.
+    </div>
   </section>
 
   <!-- ================= PLATFORM DETAILS ================= -->
@@ -894,6 +956,9 @@
     <p class="sec-lead">همه اعداد این گزارش از این صفحات رسمی استخراج و در آبان ۱۴۰۵ صحت‌سنجی شده‌اند:</p>
     <div class="sources">
       <a href="https://vercel.com/docs/plans/hobby" target="_blank"><span class="si">↗</span><span>vercel.com/docs/plans/hobby</span></a>
+      <a href="https://vercel.com/docs/limits" target="_blank"><span class="si">↗</span><span>vercel.com/docs/limits</span></a>
+      <a href="https://vercel.com/docs/functions/limitations" target="_blank"><span class="si">↗</span><span>vercel.com/docs/functions/limitations</span></a>
+      <a href="https://docs.deno.com/deploy/pricing_and_limits/" target="_blank"><span class="si">↗</span><span>docs.deno.com/deploy/pricing_and_limits</span></a>
       <a href="https://vercel.com/docs/rest-api" target="_blank"><span class="si">↗</span><span>vercel.com/docs/rest-api</span></a>
       <a href="https://developers.cloudflare.com/workers/platform/pricing/" target="_blank"><span class="si">↗</span><span>developers.cloudflare.com/workers/platform/pricing</span></a>
       <a href="https://developers.cloudflare.com/workers/platform/limits/" target="_blank"><span class="si">↗</span><span>developers.cloudflare.com/workers/platform/limits</span></a>
